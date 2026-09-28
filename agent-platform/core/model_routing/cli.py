@@ -7,7 +7,10 @@ import asyncio
 import json
 from typing import Any
 
+from pydantic import ValidationError
+
 from core.model_routing.profiles import ModelCatalog
+from core.model_routing.requests import InvokeRequest
 from core.model_routing.router import RoutingError
 from core.orchestrator.runtime import AgentRuntime, Session
 
@@ -36,20 +39,22 @@ def parser() -> argparse.ArgumentParser:
 
 
 async def execute(args: argparse.Namespace) -> Any:
+    request = InvokeRequest(
+        message=args.message,
+        agent_id=args.agent,
+        model_id=args.model,
+        preference=args.preference,
+        task=args.task,
+        max_cost_tier=args.max_cost_tier,
+    )
     runtime = AgentRuntime()
-    routing = {
-        "model_id": args.model,
-        "preference": args.preference,
-        "task_hint": args.task,
-        "max_cost_tier": args.max_cost_tier,
-    }
     if args.command == "route":
         return runtime.plan(
-            "cli-local", args.agent, Session(), args.message, **routing
+            "cli-local", request.agent_id, Session(), request.message, **request.routing()
         ).model_dump()
-    sid, state = runtime.session("cli-local", args.agent, None)
+    sid, state = runtime.session("cli-local", request.agent_id, request.session_id)
     result = await runtime.invoke_with_route(
-        "cli-local", args.agent, sid, state, args.message, **routing
+        "cli-local", request.agent_id, sid, state, request.message, **request.routing()
     )
     return {"output": result.output, "session_id": sid, "route": result.route.model_dump()}
 
@@ -62,6 +67,9 @@ def main() -> int:
             if args.command == "models"
             else asyncio.run(execute(args))
         )
+    except ValidationError:
+        print(json.dumps({"error": "Invalid request", "code": "invalid_request"}))
+        return 1
     except RoutingError as exc:
         print(json.dumps({"error": str(exc), "code": exc.code}, ensure_ascii=False))
         return 1

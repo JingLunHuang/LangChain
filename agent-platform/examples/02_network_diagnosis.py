@@ -1,21 +1,8 @@
-"""示例 02：網路故障診斷 Agent（工具可插拔版）
+"""課程範例 02：四個模擬網路診斷工具，共用 Agent 與 MCP 工具清單。
 
-
-（ping / DNS 解析 / 介面檢查 / 日誌分析 共 4 個模擬診斷工具）
-
-新架構改進點：
-- Agent 改由編排層 core.orchestrator.create_platform_agent(tools=...) 建立，
-  與平臺接入層共用同一套調度邏輯；
-- 工具不再散落在腳本里，而是集中到 DIAGNOSIS_TOOLS 註冊表：新增診斷工具
-  只需往註冊表加一項，Agent 與 MCP Server 即可同時獲得該能力（即插即用）；
-- 演示協議層理念：同一批工具既可直接注入平臺 Agent，也可通過
-  mcp_server.registry.register_tools(server) 掛載到 MCP Server。
-  執行 `python examples/02_network_diagnosis.py --mcp` 會以 stdio 方式
-  啟動一個最小 MCP Server，對外暴露全部診斷工具。
-
-執行方式（在 agent-platform 根目錄下）：
-    python examples/02_network_diagnosis.py         # 平臺 Agent 診斷演示
-    python examples/02_network_diagnosis.py --mcp   # 以 MCP stdio Server 暴露工具
+模擬結果不代表真實網路狀態；正式平台入口使用 mcp_server.server。
+執行：uv run python -m examples.02_network_diagnosis
+暴露範例工具：uv run python -m examples.02_network_diagnosis --mcp
 """
 
 import asyncio
@@ -23,12 +10,13 @@ import random
 import re
 import sys
 from pathlib import Path
+from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from langchain_core.tools import tool
 
-from core.orchestrator.agent import create_platform_agent
+from core.orchestrator.agent import ainvoke_agent, create_platform_agent
 
 
 @tool
@@ -40,7 +28,6 @@ def ping_tool(target: str) -> str:
     回傳:
         模擬的 ping 結果
     """
-    print(f"--- 模擬執行 Ping: {target} ---", file=sys.stderr)
     if "unreachable" in target or target == "192.168.1.254":
         return f"Ping {target} 失敗：請求超時。"
     if target == "localhost" or target == "127.0.0.1":
@@ -61,7 +48,6 @@ def dns_tool(hostname: str) -> str:
     回傳:
         模擬的 DNS 解析結果
     """
-    print(f"--- 模擬 DNS 查詢: {hostname} ---", file=sys.stderr)
     if hostname == "www.example.com":
         return f"DNS 解析 {hostname} 成功：IP 地址是 93.184.216.34"
     if hostname == "internal.service.local":
@@ -82,11 +68,10 @@ def interface_check_tool(interface_name: str | None = None) -> str:
     回傳:
         模擬的介面狀態資訊
     """
-    print(f"--- 模擬檢查接口狀態: {interface_name or '默認接口'} ---", file=sys.stderr)
     if interface_name and "eth1" in interface_name.lower():
         return f"接口 '{interface_name}' 狀態：關閉 (Administratively down)"
     return (
-        "接口 'Ethernet'/'Wi-Fi' 狀態：啓用, IP 地址: 192.168.1.50, "
+        "接口 'Ethernet'/'Wi-Fi' 狀態：啟用, IP 地址: 192.168.1.50, "
         "子網掩碼: 255.255.255.0, 網關: 192.168.1.1"
     )
 
@@ -101,7 +86,6 @@ def log_analysis_tool(keywords: str, time_range: str | None = "過去1小時") -
     回傳:
         模擬的日誌分析結果
     """
-    print(f"--- 模擬分析日誌: 關鍵詞='{keywords}', 時間範圍='{time_range}' ---", file=sys.stderr)
     keywords_lower = keywords.lower()
     if "timeout" in keywords_lower or "超時" in keywords_lower:
         return (
@@ -134,26 +118,20 @@ def run_mcp_stdio_server() -> None:
     生產環境請使用 `python -m mcp_server.server --transport stdio|sse`，
     由 mcp_server/registry.py 的 register_tools(server) 統一掛載工具。
     """
-    try:
-        from mcp.server.fastmcp import FastMCP
-    except ImportError:
-        print("錯誤：未安裝 mcp 包，無法啓動 MCP Server。請先安裝依賴：uv add mcp")
-        sys.exit(1)
+    from mcp.server.fastmcp import FastMCP
 
     mcp_server = FastMCP("network-diagnosis")
     for diag_tool in DIAGNOSIS_TOOLS:
         mcp_server.add_tool(diag_tool.func, name=diag_tool.name, description=diag_tool.description)
     print(
-        "MCP Server (stdio) 已啓動，已註冊工具: " + ", ".join(t.name for t in DIAGNOSIS_TOOLS),
+        "MCP Server (stdio) 已啟動，已註冊工具: " + ", ".join(t.name for t in DIAGNOSIS_TOOLS),
         file=sys.stderr,
     )
     mcp_server.run(transport="stdio")
 
 
-async def diagnose(agent, issue_description: str) -> str:
-    print(f"\n--- 開始診斷任務 ---\n用戶問題: {issue_description}")
-    result = await agent.ainvoke({"messages": [("user", issue_description)]})
-    return result["messages"][-1].content
+async def diagnose(agent: Any, issue_description: str) -> str:
+    return await ainvoke_agent(agent, issue_description)
 
 
 async def main() -> None:

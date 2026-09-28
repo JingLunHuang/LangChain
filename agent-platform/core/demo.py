@@ -1,13 +1,18 @@
-"""Deterministic offline demo model that exercises real LangChain tool dispatch."""
+"""離線操作模式專用的聊天與向量 adapter，與正式供應商及檢索實作分開。"""
 
 from __future__ import annotations
 
+import hashlib
+import math
 from collections.abc import Iterator, Sequence
 from typing import Any
 
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import AIMessage, AIMessageChunk, BaseMessage, ToolMessage
 from langchain_core.outputs import ChatGeneration, ChatGenerationChunk, ChatResult
+from llama_index.core.base.embeddings.base import BaseEmbedding
+
+from core.data_engine.retrieval import tokenize
 
 
 class DemoChatModel(BaseChatModel):
@@ -69,3 +74,23 @@ class DemoChatModel(BaseChatModel):
                 yield ChatGenerationChunk(
                     message=AIMessageChunk(content=content[offset : offset + 24])
                 )
+
+
+class DemoEmbedding(BaseEmbedding):
+    """Hashed lexical vectors for offline operation; no semantic quality claims."""
+
+    model_name: str = "demo-lexical-hash-256"
+
+    def _get_text_embedding(self, text: str) -> list[float]:
+        vector = [0.0] * 256
+        for token in tokenize(text):
+            bucket = int.from_bytes(hashlib.sha256(token.encode()).digest()[:2], "big") % 256
+            vector[bucket] += 1
+        norm = math.sqrt(sum(value * value for value in vector)) or 1
+        return [value / norm for value in vector]
+
+    def _get_query_embedding(self, query: str) -> list[float]:
+        return self._get_text_embedding(query)
+
+    async def _aget_query_embedding(self, query: str) -> list[float]:
+        return self._get_query_embedding(query)

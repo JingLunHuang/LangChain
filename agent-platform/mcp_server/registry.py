@@ -9,6 +9,7 @@ from mcp.server.fastmcp import FastMCP
 
 from core.data_engine.engine import as_mcp_tool_spec
 from core.model_routing.profiles import Preference, TaskType
+from core.model_routing.requests import InvokeRequest, SwitchRequest
 
 
 async def ping() -> str:
@@ -22,10 +23,6 @@ def register_tools(server: FastMCP, runtime: Any = None) -> None:
     server.add_tool(spec["func"], name=spec["name"], description=spec["description"])
     if runtime is None:
         return
-
-    def validate_message(message: str) -> None:
-        if not message.strip() or len(message) > 16000:
-            raise ValueError("message must be non-empty and at most 16000 characters")
 
     async def model_catalog(agent_id: str = "default") -> str:
         """列出操作者可用的模型能力與設定狀態，不回傳金鑰或端點。"""
@@ -44,20 +41,23 @@ def register_tools(server: FastMCP, runtime: Any = None) -> None:
         max_cost_tier: int | None = None,
     ) -> str:
         """預覽任務辨識、候選模型與選擇理由，不呼叫模型。"""
-        validate_message(message)
-        if max_cost_tier is not None and not 1 <= max_cost_tier <= 3:
-            raise ValueError("max_cost_tier must be 1..3")
-        sid, state = runtime.session("mcp-local", agent_id, session_id)
+        request = InvokeRequest(
+            message=message,
+            session_id=session_id,
+            agent_id=agent_id,
+            model_id=model_id,
+            preference=preference,
+            task=task,
+            max_cost_tier=max_cost_tier,
+        )
+        sid, state = runtime.session("mcp-local", request.agent_id, request.session_id)
         async with state.lock:
             route = runtime.plan(
                 "mcp-local",
-                agent_id,
+                request.agent_id,
                 state,
-                message,
-                model_id=model_id,
-                preference=preference,
-                task_hint=task,
-                max_cost_tier=max_cost_tier,
+                request.message,
+                **request.routing(),
             )
         return json.dumps({"session_id": sid, **route.model_dump()}, ensure_ascii=False)
 
@@ -69,16 +69,21 @@ def register_tools(server: FastMCP, runtime: Any = None) -> None:
         max_cost_tier: int | None = None,
     ) -> str:
         """設定對話固定模型；model_id 為 auto 或 null 時恢復自動選模，保留歷史。"""
-        if max_cost_tier is not None and not 1 <= max_cost_tier <= 3:
-            raise ValueError("max_cost_tier must be 1..3")
-        sid, state = runtime.session("mcp-local", agent_id, session_id)
-        result = await runtime.switch_model(
-            "mcp-local",
-            agent_id,
-            state,
-            model_id,
+        request = SwitchRequest(
+            session_id=session_id,
+            agent_id=agent_id,
+            model_id=model_id,
             preference=preference,
             max_cost_tier=max_cost_tier,
+        )
+        sid, state = runtime.session("mcp-local", request.agent_id, request.session_id)
+        result = await runtime.switch_model(
+            "mcp-local",
+            request.agent_id,
+            state,
+            request.model_id,
+            preference=request.preference,
+            max_cost_tier=request.max_cost_tier,
         )
         return json.dumps({"session_id": sid, **result}, ensure_ascii=False)
 
@@ -92,20 +97,23 @@ def register_tools(server: FastMCP, runtime: Any = None) -> None:
         max_cost_tier: int | None = None,
     ) -> str:
         """依任務自動選模或手動指定模型，執行 Agent 並回傳路由決策。"""
-        validate_message(message)
-        if max_cost_tier is not None and not 1 <= max_cost_tier <= 3:
-            raise ValueError("max_cost_tier must be 1..3")
-        sid, state = runtime.session("mcp-local", agent_id, session_id)
-        result = await runtime.invoke_with_route(
-            "mcp-local",
-            agent_id,
-            sid,
-            state,
-            message,
+        request = InvokeRequest(
+            message=message,
+            session_id=session_id,
+            agent_id=agent_id,
             model_id=model_id,
             preference=preference,
-            task_hint=task,
+            task=task,
             max_cost_tier=max_cost_tier,
+        )
+        sid, state = runtime.session("mcp-local", request.agent_id, request.session_id)
+        result = await runtime.invoke_with_route(
+            "mcp-local",
+            request.agent_id,
+            sid,
+            state,
+            request.message,
+            **request.routing(),
         )
         return json.dumps(
             {"output": result.output, "session_id": sid, "route": result.route.model_dump()},

@@ -14,51 +14,18 @@ from typing import Any
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query
 from fastapi.responses import FileResponse, StreamingResponse
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel, Field
 
 from core.cache_optimizer.optimizer import ContextBudgetError
-from core.model_routing.profiles import ModelCatalog, Preference, TaskType
+from core.model_routing.profiles import ModelCatalog
+from core.model_routing.requests import InvokeRequest, SwitchRequest
 from core.model_routing.router import RoutingError
 from core.orchestrator.runtime import AgentRuntime, Session
 from mcp_server.client import MCPConnection, as_langchain_tools, connect
 from platform_api.auth import KeyStore, Tenant
 
 logger = logging.getLogger(__name__)
-
-
-class InvokeRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    message: str = Field(min_length=1, max_length=16000)
-    session_id: str | None = Field(default=None, min_length=1, max_length=128)
-    agent_id: str = Field(default="default", min_length=1, max_length=64)
-    model_id: str | None = Field(default=None, min_length=1, max_length=64)
-    preference: Preference | None = None
-    task: TaskType | None = None
-    max_cost_tier: int | None = Field(default=None, ge=1, le=3)
-
-    @field_validator("message")
-    @classmethod
-    def nonblank_message(cls, value: str) -> str:
-        if not value.strip():
-            raise ValueError("message must not be blank")
-        return value
-
-    def routing(self) -> dict[str, Any]:
-        return {
-            "model_id": self.model_id,
-            "preference": self.preference,
-            "task_hint": self.task,
-            "max_cost_tier": self.max_cost_tier,
-        }
-
-
-class SwitchRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    session_id: str = Field(min_length=1, max_length=128)
-    agent_id: str = Field(default="default", min_length=1, max_length=64)
-    model_id: str | None = Field(default=None, min_length=1, max_length=64)
-    preference: Preference | None = None
-    max_cost_tier: int | None = Field(default=None, ge=1, le=3)
 
 
 class IssueKeyRequest(BaseModel):
@@ -68,6 +35,11 @@ class IssueKeyRequest(BaseModel):
 
 def routing_http_error(exc: RoutingError) -> HTTPException:
     return HTTPException(exc.status_code, {"code": exc.code, "message": str(exc)})
+
+
+def sse_frame(data: dict[str, Any], event: str | None = None) -> str:
+    prefix = f"event: {event}\n" if event else ""
+    return prefix + "data: " + json.dumps(data, ensure_ascii=False) + "\n\n"
 
 
 def create_app(
@@ -95,6 +67,9 @@ def create_app(
 
     application = FastAPI(title="OmniAgent / OmniRoute", version="0.2.0", lifespan=lifespan)
     application.state.runtime = service
+    application.mount(
+        "/static", StaticFiles(directory=Path(__file__).with_name("static")), name="static"
+    )
 
     async def current_tenant(x_api_key: str | None = Header(default=None)) -> Tenant:
         if not x_api_key:
@@ -250,7 +225,7 @@ def create_app(
             raise HTTPException(413, str(exc)) from exc
 
         async def events() -> AsyncIterator[str]:
-            yield "event: session\ndata: " + json.dumps({"session_id": sid}) + "\n\n"
+            yield sse_frame({"session_id": sid}, "session")
             try:
                 async for event in service.stream_events(
                     tenant.tenant_id,
@@ -261,20 +236,12 @@ def create_app(
                     **req.routing(),
                 ):
                     if event["type"] == "route":
-                        yield (
-                            "event: route\ndata: "
-                            + json.dumps(event["route"], ensure_ascii=False)
-                            + "\n\n"
-                        )
+                        yield sse_frame(event["route"], "route")
                     else:
-                        yield (
-                            "data: "
-                            + json.dumps({"delta": event["delta"]}, ensure_ascii=False)
-                            + "\n\n"
-                        )
+                        yield sse_frame({"delta": event["delta"]})
             except Exception as exc:
                 logger.error("Agent stream failed (%s)", type(exc).__name__)
-                yield 'event: error\ndata: {"error":"Agent unavailable"}\n\n'
+                yield sse_frame({"error": "Agent unavailable"}, "error")
                 return
             yield "data: [DONE]\n\n"
 

@@ -16,7 +16,7 @@ def build_chat_model(profile: ModelProfile) -> Any:
             "Selected model is not configured", status_code=409, code="model_not_configured"
         )
     if profile.provider == "demo":
-        from core.orchestrator.demo import DemoChatModel
+        from core.demo import DemoChatModel
 
         return DemoChatModel(profile_id=profile.id)
     key = os.getenv(profile.api_key_env, "") if profile.api_key_env else "local-key-not-required"

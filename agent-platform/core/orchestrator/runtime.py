@@ -120,10 +120,7 @@ class AgentRuntime:
         explicit = model_id not in (None, "auto")
         selected = model_id if explicit else (state.model_id if model_id is None else None)
         mode = "request" if explicit else ("session" if selected else "auto")
-        prefix = ContextOptimizer(
-            system_prefix=config.get("system_prefix", DEFAULT_SYSTEM_PROMPT),
-            few_shot_examples=config.get("few_shot_examples"),
-        ).build_prefix()
+        prefix = self.context_optimizer(config).build_prefix()
         question = {"role": "user", "content": message}
         requires_tools = (
             config.get("tools") is None or bool(config.get("tools")) or bool(self.external_tools)
@@ -213,14 +210,19 @@ class AgentRuntime:
         *,
         input_budget: int | None = None,
     ) -> list[Any]:
-        optimizer = ContextOptimizer(
+        return await self.context_optimizer(config, input_budget=input_budget).optimize_request(
+            state.history + [{"role": "user", "content": message}]
+        )
+
+    @staticmethod
+    def context_optimizer(
+        config: dict[str, Any], *, input_budget: int | None = None
+    ) -> ContextOptimizer:
+        return ContextOptimizer(
             system_prefix=config.get("system_prefix", DEFAULT_SYSTEM_PROMPT),
-            max_tokens=input_budget or config.get("max_tokens", 4096),
+            max_tokens=input_budget if input_budget is not None else config.get("max_tokens", 4096),
             few_shot_examples=config.get("few_shot_examples"),
             summary_llm=config.get("summary_llm"),
-        )
-        return await optimizer.optimize_request(
-            state.history + [{"role": "user", "content": message}]
         )
 
     @staticmethod
@@ -244,10 +246,7 @@ class AgentRuntime:
         status: str,
     ) -> None:
         config = self.resolve(tenant, agent_id)
-        prefix = ContextOptimizer(
-            system_prefix=config.get("system_prefix", DEFAULT_SYSTEM_PROMPT),
-            few_shot_examples=config.get("few_shot_examples"),
-        ).build_prefix()
+        prefix = self.context_optimizer(config).build_prefix()
         fingerprint = hashlib.sha256(
             json.dumps(prefix, ensure_ascii=False, sort_keys=True).encode()
         ).hexdigest()[:16]

@@ -1,17 +1,7 @@
-"""示例 01：平臺化工具鏈 Agent
+"""課程範例 01：文字分析、資料轉換及文字處理工具。
 
-
-（文字分析 / 資料轉換 / 統計行數 / 查找文字 / 替換文字 共 5 個 @tool）
-
-新架構改進點：
-- 不再直接呼叫 langchain.agents.create_agent，改由編排層
-  core.orchestrator.create_platform_agent(tools=...) 統一建立 Agent，
-  與平臺接入層（platform_api/api.py）共用同一套調度邏輯；
-- LLM 實例由編排層按平臺預設配置注入，示例不再關心 ChatTongyi 的初始化細節；
-- 非同步優先：使用 ainvoke 呼叫 Agent，便於後續接入 /v1/invoke、/v1/stream 端點。
-
-執行方式（在 agent-platform 根目錄下）：
-    python examples/01_toolchain_agent.py
+共用平台的模型目錄與 LangChain 執行 adapter；逐次任務路由使用 AgentRuntime。
+執行：uv run python -m examples.01_toolchain_agent
 """
 
 import asyncio
@@ -20,12 +10,13 @@ import io
 import json
 import sys
 from pathlib import Path
+from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from langchain_core.tools import tool
 
-from core.orchestrator.agent import create_platform_agent
+from core.orchestrator.agent import ainvoke_agent, create_platform_agent
 
 
 @tool
@@ -159,9 +150,8 @@ def replace_text(content: str, old_text: str, new_text: str) -> str:
 TOOLS = [text_analysis, data_conversion, count_lines, find_text, replace_text]
 
 
-async def process_task(agent, task_description: str) -> str:
-    result = await agent.ainvoke({"messages": [("user", task_description)]})
-    return result["messages"][-1].content
+async def process_task(agent: Any, task_description: str) -> str:
+    return await ainvoke_agent(agent, task_description)
 
 
 async def main() -> None:

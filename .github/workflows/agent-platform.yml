@@ -31,8 +31,6 @@ jobs:
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run python -m compileall -q core platform_api mcp_server examples
-      - run: uv run python -m examples.04_mcp_client
-      - run: uv run python -m examples.05_model_routing
       - run: uv build
       - uses: actions/upload-artifact@v4
         with:

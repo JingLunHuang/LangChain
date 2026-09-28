@@ -19,7 +19,7 @@ def configured_models() -> tuple[Any, Any]:
     if os.getenv("AGENT_PLATFORM_DEMO") == "1":
         from llama_index.core.llms import MockLLM
 
-        from .retrieval import DemoEmbedding
+        from core.demo import DemoEmbedding
 
         return DemoEmbedding(), MockLLM()
     from llama_index.embeddings.openai import OpenAIEmbedding

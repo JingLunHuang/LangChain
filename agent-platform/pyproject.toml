@@ -51,7 +51,7 @@ include = [
 [tool.ruff]
 target-version = "py311"
 line-length = 100
-extend-exclude = [".uv-cache", ".test-tmp*", ".codex-pytest-cache", "dist", ".state"]
+extend-exclude = [".uv-cache", "dist", ".state"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "ASYNC"]

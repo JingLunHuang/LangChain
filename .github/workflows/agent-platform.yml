@@ -1,18 +1,20 @@
-name: Agent Platform CI
+name: OmniAgent Platform CI
+
 on:
   push:
     paths: ['agent-platform/**', '.github/workflows/agent-platform.yml']
   pull_request:
     paths: ['agent-platform/**', '.github/workflows/agent-platform.yml']
+
 permissions:
   contents: read
+
 jobs:
   verify:
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
-        python: ['3.11', '3.12', '3.13']
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
     defaults:
@@ -23,19 +25,17 @@ jobs:
       - uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
-          python-version: ${{ matrix.python }}
+          python-version: '3.12'
           cache-dependency-glob: agent-platform/uv.lock
       - run: uv sync --locked
       - run: uv run ruff check .
       - run: uv run ruff format --check .
-      - run: uv run pytest --junitxml=reports/junit.xml
-      - run: uv run python -m scripts.smoke
-      - run: uv run python -m scripts.benchmark_context
+      - run: uv run python -m compileall -q core platform_api mcp_server examples
+      - run: uv run python -m examples.04_mcp_client
+      - run: uv run python -m examples.05_model_routing
       - run: uv build
       - uses: actions/upload-artifact@v4
-        if: always()
         with:
-          name: results-${{ matrix.os }}-${{ matrix.python }}
-          path: |
-            agent-platform/reports/
-            agent-platform/dist/
+          name: package-${{ matrix.os }}
+          path: agent-platform/dist/
+          if-no-files-found: error

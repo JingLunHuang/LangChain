@@ -21,24 +21,12 @@
 """
 
 import asyncio
-import os
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from core.orchestrator.memory import ConversationManager
-
-
-def _require_api_key() -> str:
-    api_key = os.environ.get("DASHSCOPE_API_KEY")
-    if not api_key:
-        print("錯誤：未檢測到環境變量 DASHSCOPE_API_KEY。")
-        print("請先設置 DashScope API Key，例如：")
-        print('  export DASHSCOPE_API_KEY="sk-..."   # Git Bash / Linux / macOS')
-        print("  set DASHSCOPE_API_KEY=sk-...        # Windows CMD")
-        sys.exit(1)
-    return api_key
 
 
 async def chat_round(manager: ConversationManager, session_id: str, message: str) -> None:
@@ -48,7 +36,6 @@ async def chat_round(manager: ConversationManager, session_id: str, message: str
 
 
 async def main() -> None:
-    _require_api_key()
     manager = ConversationManager()
 
     print("=== 會話 A：驗證多輪記憶 ===")

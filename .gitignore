@@ -1,23 +1,41 @@
-# 依賴與建置產物
+# 相依套件與建置產物
 node_modules/
 dist/
 build/
 target/
 __pycache__/
-*.pyc
+*.py[cod]
+*.egg-info/
+.eggs/
 .venv/
 venv/
 
-# 系統與編輯器
+# 本機環境、快取與執行狀態
+.uv-cache/
+.pytest_cache/
+.codex-pytest-cache/
+.test-tmp*/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+.state/
+reports/
+.local-archive/
+/agent-platform-github.zip
+
+# 作業系統與編輯器
 .DS_Store
 Thumbs.db
 *.log
 .idea/
 .vscode/
+*.swp
 
-# 機敏檔案（常見命名）
+# 金鑰與環境設定
 .env
 .env.*
 !.env.example
 *.pem
 *.key
+models.json

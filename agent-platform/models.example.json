@@ -1,0 +1,74 @@
+{
+  "models": [
+    {
+      "id": "fast-chat",
+      "label": "快速通用模型",
+      "provider": "openai-compatible",
+      "model": "your-fast-model",
+      "model_env": "FAST_MODEL",
+      "api_key_env": "FAST_API_KEY",
+      "base_url_env": "FAST_BASE_URL",
+      "strengths": {"general": 8, "writing": 7, "knowledge": 6, "coding": 5, "reasoning": 4},
+      "context_window": 32768,
+      "max_output_tokens": 2048,
+      "cost_tier": 1,
+      "latency_tier": 1
+    },
+    {
+      "id": "code-specialist",
+      "label": "程式開發模型",
+      "provider": "openai-compatible",
+      "model": "your-coding-model",
+      "model_env": "CODE_MODEL",
+      "api_key_env": "CODE_API_KEY",
+      "base_url_env": "CODE_BASE_URL",
+      "strengths": {"coding": 10, "general": 6, "knowledge": 7},
+      "context_window": 65536,
+      "max_output_tokens": 4096,
+      "cost_tier": 2,
+      "latency_tier": 2
+    },
+    {
+      "id": "deep-reasoning",
+      "label": "複雜推理模型",
+      "provider": "openai-compatible",
+      "model": "your-reasoning-model",
+      "model_env": "REASON_MODEL",
+      "api_key_env": "REASON_API_KEY",
+      "base_url_env": "REASON_BASE_URL",
+      "strengths": {"reasoning": 10, "coding": 8, "general": 6},
+      "context_window": 131072,
+      "max_output_tokens": 8192,
+      "cost_tier": 3,
+      "latency_tier": 3
+    },
+    {
+      "id": "claude-native",
+      "label": "Claude 原生介面",
+      "provider": "anthropic",
+      "model": "your-claude-model",
+      "model_env": "CLAUDE_MODEL",
+      "api_key_env": "ANTHROPIC_API_KEY",
+      "strengths": {"writing": 9, "reasoning": 9, "coding": 9, "general": 8},
+      "context_window": 65536,
+      "max_output_tokens": 4096,
+      "cost_tier": 3,
+      "latency_tier": 2,
+      "enabled": false
+    },
+    {
+      "id": "gemini-native",
+      "label": "Gemini 原生介面",
+      "provider": "google",
+      "model": "your-gemini-model",
+      "model_env": "GEMINI_MODEL",
+      "api_key_env": "GOOGLE_API_KEY",
+      "strengths": {"knowledge": 9, "writing": 8, "general": 8},
+      "context_window": 65536,
+      "max_output_tokens": 4096,
+      "cost_tier": 2,
+      "latency_tier": 2,
+      "enabled": false
+    }
+  ]
+}

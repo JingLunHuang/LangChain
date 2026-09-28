@@ -1,40 +1,38 @@
-# Python
+# Python 與建置產物
 __pycache__/
 *.py[cod]
-*$py.class
 *.egg-info/
 .eggs/
 build/
 dist/
 
-# uv / 虚拟环境
+# 本機環境、快取與執行狀態
 .venv/
 venv/
-
-# 测试与 lint 缓存
+.uv-cache/
 .pytest_cache/
+.codex-pytest-cache/
+.test-tmp*/
 .ruff_cache/
 .mypy_cache/
 .coverage
 htmlcov/
+.state/
+reports/
+.local-archive/
 
-# 环境变量与密钥
+# 金鑰與環境設定
 .env
 .env.*
 !.env.example
+*.pem
+*.key
+models.json
 
-# IDE
+# 作業系統與編輯器
+.DS_Store
+Thumbs.db
+*.log
 .idea/
 .vscode/
 *.swp
-
-# 系统文件
-.DS_Store
-Thumbs.db
-# Local dependency/test caches and credential storage
-.uv-cache/
-.test-tmp*/
-.codex-pytest-cache/
-.state/
-.env
-reports/*.xml

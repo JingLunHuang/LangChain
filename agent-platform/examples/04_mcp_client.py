@@ -13,7 +13,7 @@ async def main() -> None:
         name="knowledge",
         command=sys.executable,
         args=["-m", "mcp_server.server"],
-        env={"AGENT_PLATFORM_DEMO": "1"},
+        env={"AGENT_PLATFORM_DEMO": "1", "PYTHONIOENCODING": "utf-8"},
     )
     async with connect(config) as session:
         tools = await as_langchain_tools(session, config.name)

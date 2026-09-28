@@ -11,6 +11,7 @@ from langchain_core.outputs import ChatGeneration, ChatGenerationChunk, ChatResu
 
 
 class DemoChatModel(BaseChatModel):
+    profile_id: str = "demo-fast"
     tool_names: list[str] = []
 
     @property
@@ -23,7 +24,10 @@ class DemoChatModel(BaseChatModel):
     def _answer(self, messages: list[BaseMessage]) -> AIMessage:
         last = messages[-1]
         if isinstance(last, ToolMessage):
-            return AIMessage(content="[Offline demo: retrieved excerpts]\n" + str(last.content))
+            return AIMessage(
+                content=f"[Offline demo / {self.profile_id}: retrieved excerpts]\n"
+                + str(last.content)
+            )
         if "hybrid_retrieve" in self.tool_names:
             return AIMessage(
                 content="",
@@ -36,7 +40,7 @@ class DemoChatModel(BaseChatModel):
                     }
                 ],
             )
-        return AIMessage(content="[Offline demo] " + str(last.content))
+        return AIMessage(content=f"[Offline demo / {self.profile_id}] " + str(last.content))
 
     def _generate(
         self,

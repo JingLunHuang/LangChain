@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 from collections.abc import AsyncIterator, Sequence
 from typing import Any
 
@@ -16,29 +15,17 @@ DEFAULT_SYSTEM_PROMPT = (
 )
 
 
-def create_default_llm() -> BaseChatModel:
-    if os.getenv("AGENT_PLATFORM_DEMO") == "1":
-        from .demo import DemoChatModel
+def create_default_llm(*, requires_tools: bool = False) -> BaseChatModel:
+    """舊範例也從共用目錄選擇初始模型；逐次任務路由由 AgentRuntime 處理。"""
+    from core.model_routing.profiles import ModelCatalog
+    from core.model_routing.providers import build_chat_model
+    from core.model_routing.router import ModelRouter
 
-        return DemoChatModel()
-    if os.getenv("LLM_API_KEY"):
-        from langchain_openai import ChatOpenAI
-
-        model = os.getenv("LLM_MODEL")
-        if not model:
-            raise RuntimeError("LLM_MODEL must be configured")
-        return ChatOpenAI(
-            model=model,
-            api_key=os.environ["LLM_API_KEY"],
-            base_url=os.getenv("LLM_BASE_URL"),
-            streaming=True,
-            timeout=60,
-        )
-    if os.getenv("DASHSCOPE_API_KEY"):
-        from langchain_community.chat_models import ChatTongyi
-
-        return ChatTongyi(model_name=os.getenv("LLM_MODEL", "qwen-turbo"), streaming=True)
-    raise RuntimeError("Configure a model key or set AGENT_PLATFORM_DEMO=1")
+    catalog = ModelCatalog.from_environment()
+    decision = ModelRouter(catalog).select(
+        "General assistant", tenant="cli-local", requires_tools=requires_tools
+    )
+    return build_chat_model(catalog.profiles[decision.model_id])
 
 
 def create_platform_agent(
@@ -51,7 +38,9 @@ def create_platform_agent(
     tool_list = list(tools) if tools is not None else []
     tool_list.sort(key=lambda tool: tool.name)
     return create_agent(
-        model=llm or create_default_llm(), tools=tool_list, system_prompt=system_prompt
+        model=llm or create_default_llm(requires_tools=bool(tool_list)),
+        tools=tool_list,
+        system_prompt=system_prompt,
     )
 
 

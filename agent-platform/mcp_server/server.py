@@ -1,4 +1,4 @@
-"""agent-platform MCP Server 入口。
+"""OmniAgent / OmniRoute MCP Server 入口。
 
 用法:
     python -m mcp_server.server --transport stdio
@@ -20,7 +20,7 @@ from mcp_server.registry import register_tools
 
 logger = logging.getLogger(__name__)
 
-SERVER_NAME = "agent-platform"
+SERVER_NAME = "omniagent-platform"
 
 
 def register_resources(server: FastMCP) -> None:
@@ -81,7 +81,9 @@ def create_network_app(server: FastMCP, transport: str) -> Any:
 
 
 def main(argv: list[str] | None = None) -> None:
-    parser = argparse.ArgumentParser(prog="mcp_server", description="agent-platform MCP Server")
+    parser = argparse.ArgumentParser(
+        prog="mcp_server", description="OmniAgent / OmniRoute MCP Server"
+    )
     parser.add_argument("--transport", choices=["stdio", "sse", "streamable-http"], default="stdio")
     parser.add_argument("--host", default="127.0.0.1", help="SSE 模式監聽地址")
     parser.add_argument("--port", type=int, default=8000, help="SSE 模式監聽端口")
@@ -97,7 +99,7 @@ def main(argv: list[str] | None = None) -> None:
         server.settings.port = args.port
         uvicorn.run(create_network_app(server, args.transport), host=args.host, port=args.port)
     else:
-        logger.info("stdio 模式啓動")
+        logger.info("Starting stdio transport")
         server.run(transport="stdio")
 
 

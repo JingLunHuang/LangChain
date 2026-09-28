@@ -6,6 +6,8 @@ import hashlib
 import os
 import secrets
 import sqlite3
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -44,8 +46,14 @@ class KeyStore:
                 "revoked INTEGER DEFAULT 0)"
             )
 
-    def connection(self) -> sqlite3.Connection:
-        return sqlite3.connect(str(self.path))
+    @contextmanager
+    def connection(self) -> Iterator[sqlite3.Connection]:
+        connection = sqlite3.connect(str(self.path))
+        try:
+            with connection:
+                yield connection
+        finally:
+            connection.close()
 
     def issue(self, tenant: str, label: str) -> dict[str, str]:
         key_id, raw = secrets.token_hex(12), "ap_" + secrets.token_urlsafe(32)

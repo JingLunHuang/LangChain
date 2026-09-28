@@ -18,7 +18,6 @@ import asyncio
 import csv
 import io
 import json
-import os
 import sys
 from pathlib import Path
 
@@ -160,24 +159,12 @@ def replace_text(content: str, old_text: str, new_text: str) -> str:
 TOOLS = [text_analysis, data_conversion, count_lines, find_text, replace_text]
 
 
-def _require_api_key() -> str:
-    api_key = os.environ.get("DASHSCOPE_API_KEY")
-    if not api_key:
-        print("錯誤：未檢測到環境變量 DASHSCOPE_API_KEY。")
-        print("請先設置 DashScope API Key，例如：")
-        print('  export DASHSCOPE_API_KEY="sk-..."   # Git Bash / Linux / macOS')
-        print("  set DASHSCOPE_API_KEY=sk-...        # Windows CMD")
-        sys.exit(1)
-    return api_key
-
-
 async def process_task(agent, task_description: str) -> str:
     result = await agent.ainvoke({"messages": [("user", task_description)]})
     return result["messages"][-1].content
 
 
 async def main() -> None:
-    _require_api_key()
     agent = create_platform_agent(tools=TOOLS)
 
     task1 = (

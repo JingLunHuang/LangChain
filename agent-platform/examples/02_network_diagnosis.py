@@ -19,7 +19,6 @@
 """
 
 import asyncio
-import os
 import random
 import re
 import sys
@@ -129,17 +128,6 @@ def log_analysis_tool(keywords: str, time_range: str | None = "過去1小時") -
 DIAGNOSIS_TOOLS = [ping_tool, dns_tool, interface_check_tool, log_analysis_tool]
 
 
-def _require_api_key() -> str:
-    api_key = os.environ.get("DASHSCOPE_API_KEY")
-    if not api_key:
-        print("錯誤：未檢測到環境變量 DASHSCOPE_API_KEY。")
-        print("請先設置 DashScope API Key，例如：")
-        print('  export DASHSCOPE_API_KEY="sk-..."   # Git Bash / Linux / macOS')
-        print("  set DASHSCOPE_API_KEY=sk-...        # Windows CMD")
-        sys.exit(1)
-    return api_key
-
-
 def run_mcp_stdio_server() -> None:
     """以 MCP stdio Server 方式暴露診斷工具，演示協議層的工具即插即用。
 
@@ -169,7 +157,6 @@ async def diagnose(agent, issue_description: str) -> str:
 
 
 async def main() -> None:
-    _require_api_key()
     agent = create_platform_agent(tools=DIAGNOSIS_TOOLS)
 
     task1 = "我無法訪問 www.example.com，瀏覽器顯示連接超時。"

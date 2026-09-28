@@ -21,6 +21,7 @@ $env:AGENT_PLATFORM_DEMO = '1'
 $env:PLATFORM_API_KEYS = $demoKey + ':demo'
 $env:PLATFORM_KEY_DB = Join-Path $statePath 'keys.sqlite3'
 $env:PYTHONIOENCODING = 'utf-8'
-Write-Host "Offline API: http://127.0.0.1:$Port/docs"
+Write-Host "OmniRoute Studio: http://127.0.0.1:$Port/"
+Write-Host "API docs: http://127.0.0.1:$Port/docs"
 Write-Host 'A local demo key is stored in .state/demo-key.json; it is not printed.'
 & $pythonPath -m uvicorn platform_api.api:app --host 127.0.0.1 --port $Port

@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OmniRoute Studio · OmniAgent</title>
+  <style>
+    :root { --ink:#222625; --muted:#68716a; --paper:#f6f7f2; --line:#dce1d7; --orange:#d85326; --lime:#d7e8a5; --white:#fff; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--paper); color:var(--ink); font:15px/1.6 "Segoe UI","Microsoft JhengHei",sans-serif; }
+    button, input, textarea, select { font:inherit; }
+    button, select { cursor:pointer; }
+    button:disabled { cursor:not-allowed; opacity:.45; }
+    button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible { outline:3px solid #e79272; outline-offset:3px; }
+    header { max-width:1260px; margin:auto; padding:24px 34px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--line); }
+    .brand { display:flex; align-items:center; gap:12px; font-weight:700; font-size:20px; letter-spacing:-.5px; }
+    .brand svg { width:34px; height:34px; }
+    .brand small { font-size:12px; font-weight:400; color:var(--muted); margin-left:6px; }
+    nav { display:flex; align-items:center; gap:20px; }
+    a { color:var(--muted); text-decoration:none; }
+    a:hover { color:var(--orange); }
+    .pill { padding:5px 12px; border:1px solid var(--line); border-radius:99px; background:var(--white); font-size:12px; }
+    .pill.connected { background:var(--lime); border-color:#b8cb85; }
+    main { max-width:1260px; margin:auto; padding:40px 34px 24px; }
+    .eyebrow { font-size:12px; letter-spacing:2px; font-weight:700; color:var(--orange); }
+    .hero { display:flex; align-items:flex-end; justify-content:space-between; gap:30px; margin-bottom:30px; }
+    h1 { margin:10px 0; font-size:clamp(28px,4vw,46px); letter-spacing:-1px; line-height:1.35; }
+    .hero p { color:var(--muted); max-width:650px; margin:0; }
+    .badge { background:var(--ink); color:white; border-radius:10px; padding:14px 20px; min-width:140px; }
+    .badge strong { display:block; font-size:24px; }
+    .badge small { color:#c2cbc4; }
+    .workspace { display:grid; grid-template-columns:1fr 1fr; gap:22px; align-items:start; }
+    .card { background:var(--white); border:1px solid var(--line); border-radius:14px; overflow:hidden; }
+    .card-head { display:flex; align-items:center; justify-content:space-between; padding:18px 24px; border-bottom:1px solid var(--line); }
+    .card-head h2 { font-size:16px; margin:0; }
+    .step { color:var(--muted); font:12px "Consolas",monospace; letter-spacing:1px; }
+    .card-body { padding:24px; }
+    .samples { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px; }
+    .chip { border:1px solid var(--line); background:var(--paper); border-radius:6px; padding:6px 11px; font-size:12px; }
+    .chip:hover { background:var(--lime); }
+    label { display:block; font-weight:600; font-size:13px; margin-bottom:7px; }
+    textarea, input, select { width:100%; border:1px solid var(--line); border-radius:8px; background:#fff; padding:11px 12px; color:var(--ink); }
+    textarea { min-height:135px; resize:vertical; line-height:1.7; }
+    .field-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:18px; }
+    .actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:22px; }
+    .button { border:1px solid var(--line); border-radius:8px; padding:10px 16px; background:white; font-weight:600; }
+    .button.primary { background:var(--orange); color:#fff; border-color:var(--orange); }
+    .button.dark { background:var(--ink); color:#fff; border-color:var(--ink); }
+    .help { font-size:12px; color:var(--muted); margin-top:12px; }
+    .connection { margin-top:22px; padding:18px 24px; background:#eef1e8; border-top:1px solid var(--line); }
+    .connect-row { display:flex; gap:10px; }
+    .connect-row input { min-width:0; width:0; flex:1; }
+    .connect-row .button { flex-shrink:0; white-space:nowrap; }
+    .connection p { margin:8px 0 0; font-size:12px; color:var(--muted); }
+    .decision-top { display:flex; align-items:center; gap:12px; background:var(--paper); padding:18px; border-radius:10px; margin-bottom:20px; }
+    .route-icon { width:38px; height:38px; background:var(--lime); border-radius:9px; display:grid; place-items:center; font-size:23px; }
+    .decision-top strong { font-size:22px; display:block; }
+    .decision-top small { color:var(--muted); }
+    .facts { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:18px; }
+    .fact { padding:12px; border:1px solid var(--line); border-radius:8px; }
+    .fact span { font-size:11px; color:var(--muted); display:block; }
+    .fact strong { display:block; margin-top:4px; font-size:15px; word-break:break-word; }
+    .reasons { padding-left:18px; font-size:13px; color:var(--muted); margin:0 0 18px; }
+    .reasons li { margin:5px 0; }
+    .candidate { padding:12px 0; border-top:1px solid var(--line); }
+    .candidate-head { display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:13px; }
+    .candidate.selected .candidate-head { color:var(--orange); font-weight:700; }
+    .track { height:5px; background:#eef1e8; border-radius:5px; margin-top:9px; overflow:hidden; }
+    .track i { display:block; height:100%; background:#b8c1b1; border-radius:5px; }
+    .candidate.selected .track i { background:var(--orange); }
+    .candidate small { color:var(--muted); font-size:11px; }
+    .empty { color:var(--muted); font-size:13px; padding:12px 0; }
+    .output { margin-top:22px; }
+    pre { white-space:pre-wrap; overflow-wrap:anywhere; margin:0; font:13px/1.8 "Consolas","Microsoft JhengHei",monospace; max-height:360px; overflow:auto; }
+    .status { min-height:25px; font-size:13px; color:var(--muted); margin:16px 0 0; }
+    .status.error { color:#ae3219; }
+    footer { display:flex; justify-content:space-between; gap:16px; color:var(--muted); font-size:12px; padding:26px 0 4px; }
+    @media(max-width:860px) { .workspace { grid-template-columns:1fr; } .hero { align-items:flex-start; } .badge { display:none; } }
+    @media(max-width:520px) { header { padding:18px; } main { padding:26px 18px; } .brand small { display:none; } nav { gap:10px; } .card-body { padding:18px; } .field-grid { grid-template-columns:1fr; } .facts { grid-template-columns:1fr 1fr; } footer { flex-direction:column; } .connect-row { flex-wrap:wrap; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <svg viewBox="0 0 36 36" aria-hidden="true"><path d="M7 18h10m0 0 10-10m-10 10 10 10" stroke="#222625" stroke-width="2.5" fill="none"/><circle cx="7" cy="18" r="4" fill="#d85326"/><circle cx="28" cy="7" r="4" fill="#222625"/><circle cx="28" cy="29" r="4" fill="#b9cf7f"/></svg>
+      OmniAgent <small>MODEL ROUTING PLATFORM</small>
+    </div>
+    <nav><a href="/docs" target="_blank" rel="noopener">API 文件 ↗</a><span id="modeBadge" class="pill">離線預覽</span></nav>
+  </header>
+  <main>
+    <div class="hero">
+      <div><div class="eyebrow">OMNIROUTE STUDIO / 0.2</div><h1>讓任務，找到合適的模型。</h1><p>輸入任務，查看模型的選擇理由。你可以依能力自動路由，也可以手動指定，並保留同一段對話。</p></div>
+      <div class="badge"><strong>5 種任務</strong><small>一份可解釋的選模策略</small></div>
+    </div>
+    <div class="workspace">
+      <section class="card">
+        <div class="card-head"><h2>任務與模型策略</h2><span class="step">01 / INPUT</span></div>
+        <div class="card-body">
+          <div id="samples" class="samples" aria-label="範例任務"></div>
+          <label for="message">這次需要處理什麼？</label>
+          <textarea id="message" maxlength="16000">請用 Python 寫一個非同步函式，並除錯可能的例外。</textarea>
+          <div class="field-grid">
+            <div><label for="model">本次模型</label><select id="model"><option value="auto">自動判別任務並選模</option></select></div>
+            <div><label for="preference">選模偏好</label><select id="preference"><option value="balanced">能力與成本平衡</option><option value="quality">能力優先</option><option value="economy">成本優先</option><option value="latency">速度優先</option></select></div>
+            <div><label for="agent">Agent</label><select id="agent"><option value="chat">一般任務</option><option value="default">知識檢索</option></select></div>
+            <div><label for="costTier">允許的成本等級</label><select id="costTier"><option value="3">1–3：全部候選</option><option value="2">1–2：排除最高成本</option><option value="1">1：只用最低成本</option></select></div>
+          </div>
+          <div class="actions">
+            <button id="preview" class="button dark">預覽選模 →</button>
+            <button id="run" class="button primary" disabled>執行並串流</button>
+            <button id="stop" class="button" hidden>停止</button>
+          </div>
+          <p class="help">預覽不呼叫模型。示範分數為能力設定，並非供應商的實測排名。</p>
+          <div class="field-grid">
+            <div><label for="session">對話 ID（選填）</label><input id="session" maxlength="128" placeholder="執行後自動建立"></div>
+            <div><label>對話模型</label><button id="pin" class="button" disabled>套用本次選擇至對話</button></div>
+          </div>
+          <div id="status" class="status" role="status" aria-live="polite">選擇範例或輸入任務，開始查看路由決策。</div>
+        </div>
+        <div class="connection">
+          <label for="apiKey">連接平台後執行 Agent</label>
+          <div class="connect-row"><input id="apiKey" type="password" autocomplete="off" placeholder="平台 API Key"><button id="connect" class="button">連接</button><button id="disconnect" class="button" hidden>斷開</button></div>
+          <p>先使用離線預覽。平台金鑰只保留於此頁記憶體，不寫入瀏覽器儲存。</p>
+        </div>
+      </section>
+      <div>
+        <section class="card" aria-live="polite">
+          <div class="card-head"><h2>路由決策</h2><span class="step">02 / EXPLAIN</span></div>
+          <div class="card-body">
+            <div class="decision-top"><div class="route-icon">↗</div><div><strong id="selectedModel">等待選模</strong><small id="modelDetail">Task → Policy → Model</small></div></div>
+            <div class="facts"><div class="fact"><span>任務類型</span><strong id="taskFact">—</strong></div><div class="fact"><span>路由模式</span><strong id="modeFact">—</strong></div><div class="fact"><span>輸入預算</span><strong id="budgetFact">—</strong></div></div>
+            <ul id="reasons" class="reasons"></ul>
+            <div id="candidates"><p class="empty">符合工具能力、成本限制與上下文容量的模型，才會進入評分。</p></div>
+          </div>
+        </section>
+        <section class="card output">
+          <div class="card-head"><h2>Agent 回應</h2><span class="step">03 / EXECUTE</span></div>
+          <div class="card-body"><pre id="output">連接平台後，可用同一份策略執行 Agent 並查看串流。</pre></div>
+        </section>
+      </div>
+    </div>
+    <footer><span>OmniRoute 任務路由 · MCP 工具互通 · 混合檢索 · 對話模型切換</span><span>固定前綴與輸入預算依選定模型調整</span></footer>
+  </main>
+  <script>
+    'use strict';
+    const $ = id => document.getElementById(id);
+    const state = { key: '', models: [], pinned: null, busy: false, controller: null };
+    const taskNames = { general:'一般任務', coding:'程式開發', reasoning:'邏輯推理', writing:'文字寫作', knowledge:'知識檢索' };
+    const modes = { auto:'自動選模', request:'本次指定', session:'對話固定' };
+    const examples = [
+      ['程式開發','請用 Python 寫一個非同步函式，並除錯可能的例外。'],
+      ['邏輯推理','請推導並證明這個數學命題，逐步說明推理。'],
+      ['文字潤飾','請把這封 email 改寫成正式的文章，並潤飾語氣。'],
+      ['知識檢索','請根據知識庫文件，檢索 KV cache 的設計並引用來源。'],
+      ['日常問答','你好，介紹一下這個平台。']
+    ];
+    function node(tag, className, text) {
+      const element = document.createElement(tag);
+      if (className) element.className = className;
+      if (text !== undefined) element.textContent = text;
+      return element;
+    }
+    function status(message, error = false) {
+      $('status').textContent = message;
+      $('status').classList.toggle('error', error);
+    }
+    function busy(value) {
+      state.busy = value;
+      ['preview','connect','disconnect','model','preference','agent','costTier','message','session'].forEach(id => $(id).disabled = value);
+      $('run').disabled = value || !state.key;
+      $('pin').disabled = value || !state.key || !$('session').value;
+      $('stop').hidden = !value || !state.controller;
+    }
+    async function request(path, body, key = state.key, signal = undefined) {
+      const headers = body ? { 'Content-Type':'application/json' } : {};
+      if (key) headers['X-API-Key'] = key;
+      const response = await fetch(path, { method:body ? 'POST':'GET', headers, body:body ? JSON.stringify(body) : undefined, cache:'no-store', signal });
+      if (!response.ok) {
+        let message = '無法完成請求，請確認模型設定與平台金鑰。';
+        try {
+          const payload = await response.json();
+          if (typeof payload.detail === 'string') message = payload.detail;
+          else if (payload.detail && payload.detail.message) message = payload.detail.message;
+          else if (response.status === 422) message = '請確認任務、對話 ID 與選模參數。';
+        } catch (_) { /* 保留簡短的可操作錯誤訊息。 */ }
+        throw new Error(message);
+      }
+      return response;
+    }
+    function payload() {
+      const model = $('model').value;
+      const message = $('message').value;
+      if (!message.trim()) throw new Error('請先輸入任務。');
+      return { message, agent_id:$('agent').value, model_id:model === state.pinned ? null : model, preference:$('preference').value, max_cost_tier:Number($('costTier').value), session_id:$('session').value || null };
+    }
+    async function loadModels() {
+      const path = state.key ? '/v1/models?agent_id=' + encodeURIComponent($('agent').value) : '/demo/models';
+      const response = await request(path);
+      state.models = await response.json();
+      $('model').replaceChildren(new Option('自動判別任務並選模', 'auto'));
+      for (const model of state.models) {
+        const option = new Option(model.label + (model.available ? '' : '（未設定）'), model.id);
+        option.disabled = !model.available;
+        $('model').append(option);
+      }
+      if (state.pinned && state.models.some(model => model.id === state.pinned && model.available)) $('model').value = state.pinned;
+    }
+    function showDecision(decision) {
+      const selected = state.models.find(model => model.id === decision.model_id);
+      $('selectedModel').textContent = selected ? selected.label : decision.model_id;
+      $('modelDetail').textContent = decision.model_id + ' · ' + decision.provider;
+      $('taskFact').textContent = taskNames[decision.task.task] || decision.task.task;
+      $('modeFact').textContent = modes[decision.mode] || decision.mode;
+      $('budgetFact').textContent = Number(decision.input_budget).toLocaleString();
+      $('reasons').replaceChildren(...decision.reasons.map(reason => node('li', '', reason)));
+      const scores = decision.candidates.filter(candidate => candidate.eligible).map(candidate => candidate.score);
+      const max = Math.max(1, ...scores);
+      $('candidates').replaceChildren();
+      for (const candidate of decision.candidates) {
+        const wrapper = node('div', 'candidate' + (candidate.model_id === decision.model_id ? ' selected' : ''));
+        const header = node('div', 'candidate-head');
+        header.append(node('span', '', candidate.model_id), node('span', '', candidate.eligible ? candidate.score.toFixed(1) : '未納入'));
+        wrapper.append(header);
+        if (candidate.eligible) {
+          const track = node('div', 'track');
+          const bar = node('i');
+          bar.style.width = Math.max(4, candidate.score / max * 100) + '%';
+          track.append(bar); wrapper.append(track);
+        } else wrapper.append(node('small', '', candidate.reason));
+        $('candidates').append(wrapper);
+      }
+      if (decision.session_id) $('session').value = decision.session_id;
+    }
+    async function preview() {
+      try {
+        busy(true); status('正在預覽任務路由…');
+        const response = await request(state.key ? '/v1/route' : '/demo/route', payload());
+        showDecision(await response.json());
+        status(state.key ? '路由預覽完成，可以執行或固定對話模型。' : '離線預覽完成，未呼叫模型。');
+      } catch (error) { status(error.message, true); }
+      finally { busy(false); }
+    }
+    async function connect() {
+      const key = $('apiKey').value.trim();
+      if (!key) { status('請輸入平台 API Key；離線預覽無需金鑰。', true); return; }
+      try {
+        busy(true);
+        const response = await request('/v1/agents', undefined, key);
+        const agents = await response.json();
+        if (!agents.length) throw new Error('此金鑰沒有可用的 Agent。');
+        const previous = $('agent').value;
+        const names = { chat:'一般任務', default:'知識檢索' };
+        $('agent').replaceChildren(...agents.map(agent => new Option(names[agent.id] || agent.description || agent.id, agent.id)));
+        if (agents.some(agent => agent.id === previous)) $('agent').value = previous;
+        state.key = key; state.pinned = null; $('session').value = '';
+        await loadModels();
+        $('apiKey').value = '';
+        $('modeBadge').textContent = '平台已連線'; $('modeBadge').classList.add('connected');
+        $('disconnect').hidden = false;
+        status('平台已連線。先預覽，再執行你選擇的模型。');
+      } catch (error) { state.key = ''; status(error.message, true); }
+      finally { busy(false); }
+    }
+    async function disconnect() {
+      state.key = ''; state.pinned = null; $('apiKey').value = ''; $('session').value = '';
+      $('modeBadge').textContent = '離線預覽'; $('modeBadge').classList.remove('connected'); $('disconnect').hidden = true;
+      $('agent').replaceChildren(new Option('一般任務','chat'), new Option('知識檢索','default'));
+      await loadModels(); busy(false); status('已斷開平台，回到離線預覽。');
+    }
+    async function pin() {
+      try {
+        busy(true);
+        const model = $('model').value === 'auto' ? null : $('model').value;
+        const response = await request('/v1/sessions/model', { session_id:$('session').value, agent_id:$('agent').value, model_id:model, preference:$('preference').value, max_cost_tier:Number($('costTier').value) });
+        const result = await response.json(); state.pinned = result.model_id;
+        status(result.model_id ? '此對話已固定模型，原有歷史會保留。' : '此對話已恢復自動選模，原有歷史會保留。');
+      } catch (error) { status(error.message, true); }
+      finally { busy(false); }
+    }
+    async function run() {
+      if (!state.key) return;
+      state.controller = new AbortController(); busy(true); $('output').textContent = '';
+      status('正在執行 Agent…'); let completed = false;
+      try {
+        const response = await request('/v1/stream', payload(), state.key, state.controller.signal);
+        const reader = response.body.getReader(); const decoder = new TextDecoder(); let buffer = '';
+        function frame(text) {
+          let event = 'message'; const data = [];
+          for (const line of text.split('\n')) {
+            if (line.startsWith('event:')) event = line.slice(6).trim();
+            if (line.startsWith('data:')) data.push(line.slice(5).trimStart());
+          }
+          const value = data.join('\n'); if (!value) return;
+          if (value === '[DONE]') { completed = true; return; }
+          const content = JSON.parse(value);
+          if (event === 'error') throw new Error('Agent 執行失敗，請確認供應商與工具設定。');
+          if (event === 'session') $('session').value = content.session_id;
+          else if (event === 'route') showDecision(content);
+          else if (typeof content.delta === 'string') $('output').textContent += content.delta;
+        }
+        while (true) {
+          const chunk = await reader.read();
+          buffer += decoder.decode(chunk.value || new Uint8Array(), { stream:!chunk.done });
+          let boundary;
+          while ((boundary = buffer.indexOf('\n\n')) >= 0) { frame(buffer.slice(0,boundary)); buffer = buffer.slice(boundary + 2); }
+          if (chunk.done) break;
+        }
+        if (!completed) throw new Error('串流未完整結束，可檢查平台的路由紀錄。');
+        status('執行完成。你可以切換模型繼續同一段對話。');
+      } catch (error) { status(error.name === 'AbortError' ? '已停止本次串流。' : error.message, error.name !== 'AbortError'); }
+      finally { state.controller = null; busy(false); }
+    }
+    for (const [label, message] of examples) {
+      const button = node('button', 'chip', label);
+      button.addEventListener('click', () => { if (!state.busy) { $('message').value = message; preview(); } });
+      $('samples').append(button);
+    }
+    $('preview').addEventListener('click', preview); $('connect').addEventListener('click', connect);
+    $('disconnect').addEventListener('click', () => disconnect().catch(error => status(error.message, true)));
+    $('run').addEventListener('click', run); $('pin').addEventListener('click', pin);
+    $('stop').addEventListener('click', () => state.controller && state.controller.abort());
+    $('agent').addEventListener('change', async () => {
+      busy(true); state.pinned = null; $('session').value = '';
+      try { await loadModels(); status('Agent 已切換，請重新預覽路由。'); }
+      catch (error) { status(error.message, true); }
+      finally { busy(false); }
+    });
+    $('session').addEventListener('change', () => { state.pinned = null; busy(false); });
+    loadModels().then(preview).catch(error => status(error.message, true));
+  </script>
+</body>
+</html>

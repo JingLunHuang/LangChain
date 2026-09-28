@@ -12,7 +12,7 @@ from typing import Any
 DEFAULT_DOCS_PATH_ENV = "AGENT_PLATFORM_DOCS_PATH"
 DEFAULT_DOCS_PATH = Path(__file__).resolve().parents[2] / "examples" / "knowledge"
 _TOOL_NAME = "hybrid_retrieve"
-_TOOL_DESCRIPTION = "檢索本地知識庫：結合向量與 BM25，回傳答案、引用及來源。"
+_TOOL_DESCRIPTION = "檢索本地知識庫：結合向量與 BM25，回傳引用摘錄及來源。"
 
 
 def configured_models() -> tuple[Any, Any]:
@@ -25,24 +25,33 @@ def configured_models() -> tuple[Any, Any]:
     from llama_index.embeddings.openai import OpenAIEmbedding
     from llama_index.llms.openai_like import OpenAILike
 
-    key = os.getenv("LLM_API_KEY")
+    key = os.getenv("EMBEDDING_API_KEY") or os.getenv("LLM_API_KEY")
     if not key:
-        raise RuntimeError("Set LLM_API_KEY and model settings, or AGENT_PLATFORM_DEMO=1")
-    base = os.getenv("LLM_BASE_URL") or "https://api.openai.com/v1"
+        raise RuntimeError("Set EMBEDDING_API_KEY and EMBEDDING_MODEL, or AGENT_PLATFORM_DEMO=1")
+    base = (
+        os.getenv("EMBEDDING_BASE_URL") or os.getenv("LLM_BASE_URL") or "https://api.openai.com/v1"
+    )
     model = os.getenv("LLM_MODEL", "")
     embedding = os.getenv("EMBEDDING_MODEL", "")
-    if not model or not embedding:
-        raise RuntimeError("LLM_MODEL and EMBEDDING_MODEL must be configured")
-    return (
-        OpenAIEmbedding(model_name=embedding, api_key=key, api_base=base),
+    if not embedding:
+        raise RuntimeError("EMBEDDING_MODEL must be configured")
+    from llama_index.core.llms import MockLLM
+
+    summary_llm = (
         OpenAILike(
             model=model,
-            api_key=key,
-            api_base=base,
+            api_key=os.environ["LLM_API_KEY"],
+            api_base=os.getenv("LLM_BASE_URL") or "https://api.openai.com/v1",
             is_chat_model=True,
             is_function_calling_model=True,
             context_window=8192,
-        ),
+        )
+        if model and os.getenv("LLM_API_KEY")
+        else MockLLM()
+    )
+    return (
+        OpenAIEmbedding(model_name=embedding, api_key=key, api_base=base),
+        summary_llm,
     )
 
 
@@ -59,7 +68,7 @@ def build_query_engine(
     from llama_index.core.query_engine import RetrieverQueryEngine
     from llama_index.core.retrievers import QueryFusionRetriever
 
-    from .retrieval import DemoEmbedding, LexicalRetriever
+    from .retrieval import LexicalRetriever
 
     root = Path(docs_path).resolve()
     if not root.is_dir():
@@ -85,13 +94,10 @@ def build_query_engine(
         mode="reciprocal_rerank",
         use_async=True,
     )
-    if isinstance(embed_model, DemoEmbedding):
-        # NoText's factory omits llm in this release; inject it directly rather
-        # than mutate global Settings or accidentally require a provider key.
-        from llama_index.core.response_synthesizers.no_text import NoText
+    # 檢索工具只回傳來源摘錄，由已選定的 Agent 模型回答，避免第二次模型路由。
+    from llama_index.core.response_synthesizers.no_text import NoText
 
-        return RetrieverQueryEngine(fused, response_synthesizer=NoText(llm=llm))
-    return RetrieverQueryEngine.from_args(fused, llm=llm, response_mode="compact", use_async=True)
+    return RetrieverQueryEngine(fused, response_synthesizer=NoText(llm=llm))
 
 
 async def abuild_query_engine(docs_path: str | Path, **kwargs: Any) -> Any:

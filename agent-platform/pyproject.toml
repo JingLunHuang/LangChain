@@ -1,7 +1,7 @@
 [project]
 name = "agent-platform"
-version = "0.1.0"
-description = "MCP-first Agent platform with hybrid retrieval and cache-aware context management"
+version = "0.2.0"
+description = "OmniAgent: explainable task-to-model routing, MCP and hybrid retrieval"
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
@@ -23,13 +23,10 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = [
-    "pytest",
-    "pytest-asyncio",
-    "ruff",
-    "pytest-timeout",
-    "pypdf>=6,<7",
-]
+dev = ["ruff"]
+
+[project.scripts]
+omniagent = "core.model_routing.cli:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -43,17 +40,12 @@ packages = [
     "examples",
 ]
 
-[tool.pytest.ini_options]
-asyncio_mode = "auto"
-testpaths = ["tests"]
-timeout = 90
-
 [tool.hatch.build.targets.sdist]
 include = [
     "/core", "/platform_api", "/mcp_server", "/examples", "/scripts",
-    "/docs", "/tests", "/.github", "/README.md", "/LICENSE", "/TASKS.md",
+    "/README.md", "/PROJECT_OVERVIEW.md", "/LICENSE",
+    "/models.example.json", "/assets",
     "/pyproject.toml", "/uv.lock", "/.env.example", "/.gitignore",
-    "/reports/*.json", "/reports/verification.md",
 ]
 
 [tool.ruff]

@@ -100,13 +100,15 @@ API 的 `/v1/route` 與 MCP 的 `route_preview` 只做預覽。真正執行會�
 | --- | --- |
 | `core/model_routing/profiles.py` | 驗證模型目錄、租戶可見範圍、設定狀態與公開資訊 |
 | `core/model_routing/router.py` | 純政策：任務辨識、輸入容量、限制與候選排序 |
+| `core/model_routing/requests.py` | API／MCP／CLI 共用請求驗證與路由參數 |
 | `core/model_routing/providers.py` | 延遲載入不同供應商的 LangChain adapter |
 | `core/model_routing/cli.py` | 本機模型目錄、預覽及執行命令 |
 | `core/orchestrator/runtime.py` | 對話、路由、索引重用、執行與串流生命週期 |
 | `core/orchestrator/agent.py` | LangChain 建立 Agent、工具執行與文字串流 |
 | `core/data_engine/` | LlamaIndex 索引、BM25、RRF 與選用摘要 |
 | `core/cache_optimizer/` | 固定前綴、輸入估算、歷史壓縮與超限拒絕 |
-| `platform_api/` | API、金鑰管理及 Studio |
+| `core/demo.py` | 明確啟用的離線聊天與向量 adapter |
+| `platform_api/` | API、金鑰管理及 Studio HTML／CSS／JavaScript |
 | `mcp_server/` | 原生協議、工具／Resource／Prompt 與外部工具 adapter |
 
 模型 adapter 包含 OpenAI 相容、DashScope，及選用的 Claude／Gemini 原生套件；Claude 與 Gemini 不要求經過 OpenAI 協定轉換。[LangChain ChatAnthropic](https://docs.langchain.com/oss/python/integrations/chat/anthropic)、[ChatGoogleGenerativeAI](https://docs.langchain.com/oss/python/integrations/chat/google_generative_ai)
@@ -159,7 +161,7 @@ PagedAttention、GPU 記憶體和 KV Cache 由推理引擎管理。本專案實�
 | 四：作品與發布準備 | Studio、README／總覽、MIT、唯一 CI、乾淨來源包 | 未推送 GitHub、未執行遠端 Actions、未部署公開服務 |
 | 本次追加：模型切換與任務選模 | 模型目錄、供應商 adapter、規則／限制／偏好、對話切換與紀錄 | 未訓練路由模型、未證實任一真實模型是特定任務的最佳選擇 |
 
-依整理要求刪除獨立測試檔案、暫存測試輸出及重複報告，主要文件維持兩份；根 README 是作品入口。保留使用範例與 CI 基礎驗證，未將精簡後的專案描述為具備完整自動化迴歸套件。
+依整理要求刪除獨立測試檔案、驗證用展示腳本、暫存測試輸出及重複報告，主要文件維持兩份；根 README 是作品入口。保留三個原始課程範例，CI 僅做品質、編譯與打包檢查。
 
 ## 開發者筆記與範例來源
 
@@ -170,10 +172,8 @@ PagedAttention、GPU 記憶體和 KV Cache 由推理引擎管理。本專案實�
 | `01_toolchain_agent.py` | 工具型 Agent 的課程起點 |
 | `02_network_diagnosis.py` | 模擬診斷流程與 MCP 工具形式 |
 | `03_memory_conversation.py` | 基礎對話記憶及 CLI 互動 |
-| `04_mcp_client.py` | 原生協議、工具 schema 與檢索 adapter |
-| `05_model_routing.py` | 新增五類選模、實際執行、對話切換及恢復自動模式 |
 
-範例 01–03 透過模型目錄選擇初始模型，但仍展示各自的課程流程；逐次任務路由與共用上下文政策由 `AgentRuntime`、CLI、API、MCP 及範例 05 展示。MCP、LangChain、LlamaIndex、BM25／RRF 的既有概念與實作各有上游來源，個人貢獻是平台組合與政策設計。
+範例 01–03 透過模型目錄選擇初始模型，保留各自的課程流程；逐次任務路由與共用上下文政策由正式 `AgentRuntime`、CLI、API 及 MCP 提供。MCP、LangChain、LlamaIndex、BM25／RRF 的既有概念與實作各有上游來源，個人貢獻是平台組合與政策設計。
 
 ## 本機驗證記錄
 

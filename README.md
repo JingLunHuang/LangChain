@@ -20,4 +20,4 @@ powershell -ExecutionPolicy Bypass -File .\scripts\start-demo.ps1
 - [PROJECT_OVERVIEW：架構、個人設計、規劃對照與驗證邊界](agent-platform/PROJECT_OVERVIEW.md)
 - [MIT 授權](agent-platform/LICENSE)
 
-主要文件維持兩份，保留五個可執行範例及一份根目錄 CI。金鑰、環境、快取、備份與建置產物由 `.gitignore` 排除。
+主要文件維持兩份，保留三個原始課程範例及一份根目錄 CI。金鑰、環境、快取、備份與建置產物由 `.gitignore` 排除。

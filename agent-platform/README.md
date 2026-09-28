@@ -71,11 +71,14 @@ uv run omniagent models
 uv run omniagent route "請用 Python 寫一個非同步函式" --preference quality
 uv run omniagent route "請證明這個數學命題" --max-cost-tier 2
 uv run omniagent run "把這封 email 改寫成正式文章" --model demo-writer
-uv run python -m examples.05_model_routing
-uv run python -m examples.04_mcp_client
+uv run python -m examples.01_toolchain_agent
+uv run python -m examples.02_network_diagnosis
+uv run python -m examples.03_memory_conversation
 ```
 
 `route` 不呼叫模型；`run` 執行選到的 Agent。`--task` 可明確指定五類任務之一。CLI 為本機操作者入口，每次執行建立新 runtime；跨請求對話使用 API 或持續執行的 MCP Server。
+
+保留的三個範例是原始課程資產；MCP 握手與模型切換的獨立驗證腳本已移除。請透過正式 CLI、API 或 Studio 使用模型路由與對話切換。
 
 ## 設定真實模型
 
@@ -180,7 +183,7 @@ uv run python -m mcp_server.server --transport streamable-http --port 8001
 # 或：uv run python -m mcp_server.server --transport sse --port 8002
 ```
 
-端點為 `http://127.0.0.1:8001/mcp` 或 `http://127.0.0.1:8002/sse`。MCP 使用操作者範圍 `mcp-local`，沒有沿用 API 的租戶金鑰制度。API 可透過 `PLATFORM_MCP_SERVERS` 設定外部伺服器；工具 adapter 保留 JSON Schema 與 namespace。詳見總覽及範例 04。
+端點為 `http://127.0.0.1:8001/mcp` 或 `http://127.0.0.1:8002/sse`。MCP 使用操作者範圍 `mcp-local`，沒有沿用 API 的租戶金鑰制度。API 可透過 `PLATFORM_MCP_SERVERS` 設定外部伺服器；工具 adapter 保留 JSON Schema 與 namespace。Client 的連線與工具轉接實作位於 `mcp_server/client.py`。
 
 ## 上下文與部署邊界
 
@@ -197,9 +200,11 @@ agent-platform/
 │   ├── orchestrator/        # 共用對話與 LangChain 執行
 │   ├── data_engine/         # LlamaIndex 向量 + BM25 + RRF
 │   └── cache_optimizer/     # 固定前綴、壓縮與預算
-├── platform_api/           # API、金鑰管理、Studio
+│   # demo.py 僅供明確啟用的離線操作模式
+├── platform_api/           # API、金鑰管理、Studio HTML
+│   └── static/             # Studio CSS 與 JavaScript
 ├── mcp_server/             # MCP Server / Client
-├── examples/               # 五個範例與本機知識資料
+├── examples/               # 三個課程範例與本機知識資料
 ├── assets/                 # 介面截圖
 ├── scripts/start-demo.ps1
 ├── models.example.json
@@ -212,11 +217,11 @@ agent-platform/
 ```powershell
 uv run ruff check .
 uv run ruff format --check .
-uv run python -m examples.04_mcp_client
-uv run python -m examples.05_model_routing
 uv build
 ```
 
-依檔案精簡需求，未保留獨立測試套件或零散報告。唯一 CI 位於儲存庫根目錄 `.github/workflows/agent-platform.yml`，執行品質檢查、編譯、MCP／路由示範及打包；它是基礎驗證，未涵蓋全部迴歸情境。
+API、MCP 與 CLI 共用 `core/model_routing/requests.py` 的請求驗證；上下文準備與 SSE 格式也集中處理。離線 adapter 放在 `core/demo.py`，正式供應商及 BM25 檢索不混入模擬實作。
+
+未保留獨立測試套件、驗證腳本或零散報告。唯一 CI 位於儲存庫根目錄 `.github/workflows/agent-platform.yml`，只執行品質檢查、編譯及打包。
 
 授權：[MIT](LICENSE)。

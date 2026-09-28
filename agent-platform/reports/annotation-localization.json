@@ -1,0 +1,184 @@
+{
+  "scope": "Python comments and docstrings only",
+  "files_scanned": 35,
+  "files_changed": 8,
+  "annotation_edits": 20,
+  "executable_ast_unchanged": true,
+  "files": [
+    {
+      "file": "core/__init__.py",
+      "annotation_edits": 0,
+      "executable_ast_unchanged": true
+    },
+    {
+      "file": "core/cache_optimizer/__init__.py",
+      "annotation_edits": 0,
+      "executable_ast_unchanged": true
+    },
+    {
+      "file": "core/cache_optimizer/optimizer.py",
+      "annotation_edits": 0,
+      "executable_ast_unchanged": true
+    },
+    {
+      "file": "core/data_engine/__init__.py",
+      "annotation_edits": 1,
+      "executable_ast_unchanged": true
+    },
+    {
+      "file": "core/data_engine/compression.py",
+      "annotation_edits": 0,
+      "executable_ast_unchanged": true
+    },
+    {
+      "file": "core/data_engine/engine.py",
+      "annotation_edits": 0,
+      "executable_ast_unchanged": true
+    },
+    {
+      "file": "core/data_engine/retrieval.py",
+      "annotation_edits": 0,
+      "executable_ast_unchanged": true
+    },
+    {
+      "file": "core/orchestrator/__init__.py",
+      "annotation_edits": 0,
+      "executable_ast_unchanged": true
+    },
+    {
+      "file": "core/orchestrator/agent.py",
+      "annotation_edits": 0,
+      "executable_ast_unchanged": true
+    },
+    {
+      "file": "core/orchestrator/demo.py",
+      "annotation_edits": 0,
+      "executable_ast_unchanged": true
+    },
+    {
+      "file": "core/orchestrator/memory.py",
+      "annotation_edits": 2,
+      "executable_ast_unchanged": true
+    },
+    {
+      "file": "core/orchestrator/runtime.py",
+      "annotation_edits": 0,
+      "executable_ast_unchanged": true
+    },
+    {
+      "file": "platform_api/__init__.py",
+      "annotation_edits": 0,
+      "executable_ast_unchanged": true
+    },
+    {
+      "file": "platform_api/api.py",
+      "annotation_edits": 0,
+      "executable_ast_unchanged": true
+    },
+    {
+      "file": "platform_api/auth.py",
+      "annotation_edits": 0,
+      "executable_ast_unchanged": true
+    },
+    {
+      "file": "mcp_server/__init__.py",
+      "annotation_edits": 1,
+      "executable_ast_unchanged": true
+    },
+    {
+      "file": "mcp_server/client.py",
+      "annotation_edits": 0,
+      "executable_ast_unchanged": true
+    },
+    {
+      "file": "mcp_server/registry.py",
+      "annotation_edits": 0,
+      "executable_ast_unchanged": true
+    },
+    {
+      "file": "mcp_server/server.py",
+      "annotation_edits": 2,
+      "executable_ast_unchanged": true
+    },
+    {
+      "file": "examples/01_toolchain_agent.py",
+      "annotation_edits": 6,
+      "executable_ast_unchanged": true
+    },
+    {
+      "file": "examples/02_network_diagnosis.py",
+      "annotation_edits": 5,
+      "executable_ast_unchanged": true
+    },
+    {
+      "file": "examples/03_memory_conversation.py",
+      "annotation_edits": 1,
+      "executable_ast_unchanged": true
+    },
+    {
+      "file": "examples/04_mcp_client.py",
+      "annotation_edits": 0,
+      "executable_ast_unchanged": true
+    },
+    {
+      "file": "examples/__init__.py",
+      "annotation_edits": 0,
+      "executable_ast_unchanged": true
+    },
+    {
+      "file": "tests/__init__.py",
+      "annotation_edits": 0,
+      "executable_ast_unchanged": true
+    },
+    {
+      "file": "tests/conftest.py",
+      "annotation_edits": 0,
+      "executable_ast_unchanged": true
+    },
+    {
+      "file": "tests/test_cache_optimizer.py",
+      "annotation_edits": 0,
+      "executable_ast_unchanged": true
+    },
+    {
+      "file": "tests/test_data_engine.py",
+      "annotation_edits": 0,
+      "executable_ast_unchanged": true
+    },
+    {
+      "file": "tests/test_examples.py",
+      "annotation_edits": 0,
+      "executable_ast_unchanged": true
+    },
+    {
+      "file": "tests/test_mcp_compat.py",
+      "annotation_edits": 0,
+      "executable_ast_unchanged": true
+    },
+    {
+      "file": "tests/test_orchestrator.py",
+      "annotation_edits": 2,
+      "executable_ast_unchanged": true
+    },
+    {
+      "file": "tests/test_platform_api.py",
+      "annotation_edits": 0,
+      "executable_ast_unchanged": true
+    },
+    {
+      "file": "tests/test_runtime.py",
+      "annotation_edits": 0,
+      "executable_ast_unchanged": true
+    },
+    {
+      "file": "scripts/benchmark_context.py",
+      "annotation_edits": 0,
+      "executable_ast_unchanged": true
+    },
+    {
+      "file": "scripts/smoke.py",
+      "annotation_edits": 0,
+      "executable_ast_unchanged": true
+    }
+  ]
+}

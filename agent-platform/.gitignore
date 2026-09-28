@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# uv / 虚拟环境
+.venv/
+venv/
+
+# 测试与 lint 缓存
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# 环境变量与密钥
+.env
+.env.*
+!.env.example
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# 系统文件
+.DS_Store
+Thumbs.db
+# Local dependency/test caches and credential storage
+.uv-cache/
+.test-tmp*/
+.codex-pytest-cache/
+.state/
+.env
+reports/*.xml

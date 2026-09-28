@@ -1,0 +1,23 @@
+# 依賴與建置產物
+node_modules/
+dist/
+build/
+target/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# 系統與編輯器
+.DS_Store
+Thumbs.db
+*.log
+.idea/
+.vscode/
+
+# 機敏檔案（常見命名）
+.env
+.env.*
+!.env.example
+*.pem
+*.key

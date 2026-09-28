@@ -1,0 +1,366 @@
+Q：今天的课程内容和之前agent开发课程的有啥区别？
+
+
+Q：不来langraph吗？
+
+Q：skill和function call什么区别啊
+Skill：Skill.md 里面会包括 Skill meta（name, description）+ script
+（渐进式加载） 
+Function Call：LLM 直接调用函数script
+
+Agent配了 80个工具（Skill）
+
+Q：TRAE 显示上下文使用率 61% ， 是不是意思到100%就要花钱了
+context到了100%，需要summary（自动进行summary）
+
+
+Leon wang：TRAE 显示上下文使用率 61% ， 是不是意思到100%就要花钱了---会有上下文压缩
+
+
+Q：mcp会加载全部的函数描述，占用上下文比较多
+
+
+Q：学了langChain可以做什么
+
+
+Q：langchain不支持skill么，那跟其他Agent框架比起来有什么优势呢，毕竟skill太重要了
+langchain/langgraph/deepagents/langsmith
+
+Q：试了vllm跟sglang同时启动，sglang设了0.4，vllm就不可以了，得0.8-0.9
+
+
+Q：为什么cloudcode不用传统rag?
+
+
+Q：今天刷到ts才是agent的未来
+
+
+什么情况？几个直播间？
+
+
+Q：啥叫传统rag
+RAG
+
+
+typescript：
+
+Q：老师用AI工具开发的时候文档是怎么写的
+需求文档 => plan
+测试文档
+
+Q：func call回调时提供给模型的文本占用上下文吗
+message = {
+role: system
+role: user
+role: ai assistant
+role: function
+}
+
+Q：想问下完整的agent制作流程，其中aicoding部分是工作流引用插件还是手动ai呢？
+vibe coding：AI编程工具，claude code, cursor
+
+
+Q：sdd就是整个项目规范嘛
+
+
+Q：langchain.chat_models 的init_chat_model
+
+
+
+Q：对于skills返回的内容,如何判断哪些数据需要放入向量库,哪些不放入?
+RAG（向量数据库 ）
+1亿token知识库 =>向量数据库 帮我过滤 => 20K
+
+
+Agent：
+1）Coze, Dify（低代码）
+2）LangChain/LangGraph （基础设置）
+3）Hermes/OpenClaw/nanobot/DeepAgents （现代Agent）
+Agent + Skill
+
+
+# 创建Prompt Template
+prompt = PromptTemplate(
+    input_variables=["product"],
+    template="What is a good name for a company that makes {product}?",
+)
+
+# 新推荐用法：将 prompt 和 llm 组合成一个"可运行序列"
+chain = prompt | llm
+
+jupyter lab
+
+"user", "今天是几月几号?历史上的今天有哪些名人出生"
+github
+
+环境变量：SERPAPI_API_KEY
+@3-LLMChain.py 帮我梳理代码逻辑，可视使用mermaid （包括流程和时序图），写入到 .html
+
+2.8万亿参数，896个专家，激活 16个，MOE
+
+
+Agent（代理） = LLM（推理决策） + 工具 + 知识库
+
+代码（能做什么，逻辑） => 跑通的案例
+@这个案例，改写新的内容
+
+LangChain：
+1）提示词模版 ***
+2）内置工具、自定义工具 @tool ***
+3）短期记忆（之前的对话）***
+4）CoT
+
+
+pip install langchain
+
+LangChain开发：
+# 定义工具集
+tools = [find_product_description, find_company_info]
+
+Coze Agent：如果你的工具 是Coze里面就有的 => Coze Agent
+高代码 自建工具更方便
+
+
+分析以下文本的情感倾向，并统计其中的行数：'
+这个产品非常好用，我很喜欢它的设计，使用体验非常棒！\n
+价格也很合理，推荐大家购买。\n
+客服态度也很好，解答问题很及时。'
+
+
+将以下CSV数据转换为JSON格式：'
+name,age,comment\n
+张三,25,这个产品很好\n
+李四,30,服务态度差\n
+王五,28,性价比高'
+
+
+```json
+[
+  {
+    "name": "张三",
+    "age": "25",
+    "comment": "这个产品很好"
+  },
+  {
+    "name": "李四",
+    "age": "30",
+    "comment": "服务态度差"
+  },
+  {
+    "name": "王五",
+    "age": "28",
+    "comment": "性价比高"
+  }
+]
+```
+
+Q：工具链底层也是react的吧？
+Agent 思考模式就是ReAct （Reason + Action）
+
+
+s 上 skill
+
+
+Q：Json是那个Java scrip嘛
+
+
+Q：脚本不一定是tool，也可以是工作流，看具体要怎么用
+函数
+
+Q：我在 Windows 上安装了 Claude Code，并通过 VS Code 的 SSH 远程连接到一台 Linux 机器。
+SSH（远程工具）
+
+
+Q：工具可以互相调用吗？比如：skill1调用skill2。因为有时候希望把一个功能单独封装，以便多处重复使用。
+Skill（工具）的设计原则
+1）原子性
+script（input => script => output）
+
+2）复合性
+思考逻辑
+
+Q：请问，如果想在这种远程开发环境下使用 Claude Code，Linux 机器上还需要单独安装 Claude Code 吗？
+Claude Code = Agent （在本机使用），可以通过使用SSH，方便 你的远程Linux
+
+
+
+Q：老师，老师，并行还是串行，先用谁后用谁是LLM决定的吗？我们可以规定顺序吗？---llm 决定，顺序这个 LangChain 怕是不太好搞
+A | B | C
+
+
+Q：多个相似工具或者serpAPI能设置调用的优先级嘛
+在prompt中软约束
+
+
+Q：langchain 的自带的工具就不需要在代码中写了是吧？自带的工具会自动给到模型？
+
+Step1，git clone https://github.com/langchain-ai/langchain.git
+Step2，解读源代码
+
+@1-simple_toolchain.py 我想做一个网络故障诊断Agent，里面可以打造多个工具进行故障诊断（比如常用的5个），编写新的 .py
+
+
+按现有工具链结构，新建网络故障诊断 Agent，包含 ping、traceroute、DNS、端口检测、HTTP 连通性等常用工具。
+
+我访问 https://www.baidu.com 很慢或不稳定，请帮我做网络故障诊断。
+
+任务1: 我访问 https://www.baidu.com 很慢或不稳定，请帮我做网络故障诊断。
+结果: ### 现象
+用户访问 `https://www.baidu.com` 时出现网络速度慢或不稳定的问题。
+
+### 排查步骤
+1. **Ping 检测**：对 `www.baidu.com` 执行 Ping 检测，确认基础网络连通性。结果表明网络连接稳定，无丢包。
+2. **DNS 解析检测**：检查 `www.baidu.com` 的 DNS 解析，发现解析到的 IP 地址为 `198.18.0.145`，未发现异常。
+3. **HTTP 服务检测**：对 `https://www.baidu.com` 进行 HTTP 可达性检测，返回状态码为 200 OK，说明网站服务正常。       
+
+### 结论与建议
+- **结论**：从当前检测结果来看，网络连通性、DNS 解析和 Web 服务均正常，没有明显问题。
+- **建议**：
+  - 如果仍然存在访问慢的问题，可能是浏览器缓存、本地网络延迟或 CDN 配置导致。
+  - 尝试清除浏览器缓存，或者更换浏览器测试。
+  - 若问题持续，可进一步排查本地网络环境（如路由器、网卡驱动等）或联系网络服务提供商。
+
+    task2 = "服务器 127.0.0.1 的 80 端口好像连不上，请排查本地端口和 HTTP 服务状态。"
+
+
+任务2: 服务器 127.0.0.1 的 80 端口好像连不上，请排查本地端口和 HTTP 服务状态。
+结果: ### 现象
+用户反馈无法访问本地服务器 127.0.0.1 的 80 端口，且 HTTP 服务似乎不可达。
+
+### 排查步骤
+1. **检测端口连通性**：使用 `check_port` 工具确认 127.0.0.1:80 是否可连接。
+2. **检测 HTTP 服务可达性**：使用 `check_http` 工具尝试访问 http://127.0.0.1，验证 Web 服务是否正常运行。
+
+### 结论与建议
+- **结论**：根据检测结果，127.0.0.1:80 端口无法连接，HTTP 请求也因目标计算机拒绝而失败。这表明：
+  - 本地的 Web 服务（如 Apache、Nginx）可能未启动或配置错误。
+  - 防火墙可能阻止了对 80 端口的访问。
+  - 本地网络设置或路由表可能存在异常。
+
+- **建议**：
+  1. 检查本地 Web 服务是否已正确启动并监听 80 端口。
+  2. 确认防火墙设置，允许 80 端口的入站连接。
+  3. 如果是开发环境，可以尝试更换端口（例如 8080），以避免与其他服务冲突。
+  4. 若仍无法解决，可通过命令行工具（如 `netstat -an | findstr :80`）检查 80 端口是否被占用或监听。
+
+帮我梳理@2-network_diagnosis_agent.py 代码逻辑，可以用mermaid，可以写入到 .md中
+
+Q：这些工具好像是操作系统自带的、或者是langchain自带的？为什么还需要python里开发工具？
+ping （cmd命令行直接ping）
+
+
+Q：如果我用hermes开发了一个agent是不是就是hermes的框架，这个agent可以直接迁移到lainchain下面么
+工具，Skill （name, description）
+
+
+Q：vscode 开源，插件化
+
+
+Q：所以工具链有什么用？
+
+
+Q：怎么调用非python语言写的工具方法
+命令行调用 java 
+
+Trae IDE排到1000多号去了
+
+
+Q：老师，问一下这个怎么去判断给出的回答是否存在幻觉，是否正确？
+测试集(input, output，参考答案)
+
+
+Q：陈老师，缓存命中是什么，memory 几种模式对缓存命中的影响
+LLM cache （system prompt, tool prompt）
+
+Q：memory是存在本地吗？能否设置大小？之前介绍的是有一个.md文件存放在本地的。理解对吗？
+短期memory（上下文对话）
+长期memory（文件）
+
+
+Q：模型迭代太快了
+
+
+Q：ModuleNotFoundError: No module named 'langchain_community'
+pip install
+
+会讲turn吗
+
+
+pip install xxxx
+
+
+Q：RunnableBranch 加上判断是不是就变成多种分支了？
+{'X': A, 'Y': B}
+
+
+Q：工作流只适用简单的场景
+
+
+Q：循环,可以直接用python代码来实现吗
+
+
+Q：这不明显缺库吗
+
+
+Q：AgentScope架构怎么样？
+
+
+Q：里面为什么没有codex？和他们不是一个东西吗？
+codex, claude code, codebuddy, lingma => code agent
+codex 写LangChain Agent
+
+Q：关于短期记忆，是每个新一轮对话的时候，都会将前几轮的对话内容带上一起给到大模型吗？langchain自动带的吗？
+
+
+Q：依赖怎么体现的，就看到A|B就是它们互相依赖了？
+A=>B 串行
+A | B | C | ...
+Runnable B(input来自A）
+Runnable C（没有额外的 input）
+
+Java 一般用哪个？
+
+
+线程？
+
+线程
+
+
+Q：liangchain界面开发如何实现？
+vue, react
+
+Q：Java有Langchain4j
+
+langchain4j
+
+
+pip install -r requirements.txt
+
+Q：
+1、复合性是指都是promt吗？复合性和原子性不是冲突吗？
+2、怎么实现大模型的课解释性
+
+
+Q：文件型的RAG怎么搭建， 什么时候讲讲呢？
+向量数据库
+
+Q：什么情况下要去改框架代码，看jd上好多有定制langchain代码的要求
+
+
+Q：老师，目前学的知识原理都懂，但自己就是不知道怎么用，什么时候用
+Step1，理解概念
+Step2，跑通代码
+Step3，改写代码（AI改写，基于你的需求）
+
+Q：意思是只要没有入参就默认不依赖前置tool可以并行执行
+
+
+
+可能我的提示词没有很明确
+
+
+
+java
+
+
+高代码用于交付的，低代码用于验证的，

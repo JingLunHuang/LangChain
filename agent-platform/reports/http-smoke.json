@@ -1,8 +1,0 @@
-{
-  "health": "passed",
-  "auth": "passed",
-  "hybrid_retrieval": "passed",
-  "session_followup": "passed",
-  "stream_deltas": 97,
-  "done": true
-}

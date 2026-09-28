@@ -58,8 +58,8 @@ def convert(text: str) -> str:
         result = result.replace(source, target)
     # These are existing filesystem names, not prose: retain exact spelling.
     for translated, actual in {
-        "CASE-工具鏈組合": "CASE-工具链组合",
-        "CASE-搭建故障診斷Agent": "CASE-搭建故障诊断Agent",
+        "CASE-工具鏈組合": "CASE-工具鏈組合",
+        "CASE-搭建故障診斷Agent": "CASE-搭建故障診斷Agent",
     }.items():
         result = result.replace(translated, actual)
     return result

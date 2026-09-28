@@ -1,6 +1,6 @@
 """示例 03：多輪記憶對話
 
-課程來源：CASE-LangChain使用/4-ConversationChain.py
+
 （ChatPromptTemplate + MessagesPlaceholder + RunnableWithMessageHistory
  手工拼裝 memory chain，session 歷史存放在全域 dict 中）
 

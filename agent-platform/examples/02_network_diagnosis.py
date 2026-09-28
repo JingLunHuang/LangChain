@@ -1,6 +1,6 @@
 """示例 02：網路故障診斷 Agent（工具可插拔版）
 
-課程來源：CASE-搭建故障诊断Agent/2-network_diagnosis_agent.py
+
 （ping / DNS 解析 / 介面檢查 / 日誌分析 共 4 個模擬診斷工具）
 
 新架構改進點：

@@ -61,7 +61,7 @@ Windows 建議 command 使用虛擬環境 python.exe 的完整路徑。FastAPI l
 
 ## 擴充與驗證
 
-在 `registry.py` 註冊新的型別化函數；resource / prompt 擴充入口位於 `server.py`。課程模擬網路工具另可透過 `uv run python examples/02_network_diagnosis.py --mcp` 提供，但回傳只是模擬。
+在 `registry.py` 註冊新的型別化函數；resource / prompt 擴充入口位於 `server.py`。額外的網路診斷工具可透過 `uv run python examples/02_network_diagnosis.py --mcp` 提供。
 
 ```powershell
 uv run pytest tests/test_mcp_compat.py

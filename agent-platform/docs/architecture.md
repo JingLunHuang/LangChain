@@ -24,7 +24,7 @@ flowchart TB
 
 `core/orchestrator` 使用 LangChain `create_agent` 產生有工具迴圈的 graph，排序工具名稱以穩定 schema 排列。固定 system 訊息只由 ContextOptimizer 注入一次。編排層不使用 RetrievalQA，也不建立索引。[LangChain 官方介面](https://reference.langchain.com/python/langchain/agents/factory/create_agent)
 
-`core/data_engine` 載入 UTF-8 `.md` / `.txt`，切塊後建立 LlamaIndex VectorStoreIndex 與 BM25 Retriever，使用 QueryFusionRetriever 的 reciprocal rank fusion 合併。`num_queries=1` 避免為示範偷偷呼叫 query-expansion 模型；資料由 LlamaIndex 管理，回答包含檔名、摘錄與分數。[LlamaIndex 官方 RRF 範例](https://developers.llamaindex.ai/python/framework/integrations/retrievers/reciprocal_rerank_fusion/)
+`core/data_engine` 載入 UTF-8 `.md` / `.txt`，切塊後建立 LlamaIndex VectorStoreIndex 與 BM25 Retriever，使用 QueryFusionRetriever 的 reciprocal rank fusion 合併。`num_queries=1` 避免偷偷呼叫 query-expansion 模型；資料由 LlamaIndex 管理，回答包含檔名、摘錄與分數。[LlamaIndex 官方 RRF 範例](https://developers.llamaindex.ai/python/framework/integrations/retrievers/reciprocal_rerank_fusion/)
 
 `mcp_server` 提供官方 SDK FastMCP Server、stdio / SSE / Streamable HTTP ClientSession，以及保留 JSON inputSchema 的 LangChain StructuredTool adapter。SDK 鎖定 `mcp>=1.28,<2`，避免依賴解析升級後不相容；這是明確維護 v1 API 的選擇。[SDK v1 官方文件](https://github.com/modelcontextprotocol/python-sdk/tree/v1.x)
 

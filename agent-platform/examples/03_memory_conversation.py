@@ -1,23 +1,7 @@
-"""示例 03：多輪記憶對話
+"""課程範例 03：ConversationManager 管理不同 session 的對話記憶。
 
-
-（ChatPromptTemplate + MessagesPlaceholder + RunnableWithMessageHistory
- 手工拼裝 memory chain，session 歷史存放在全域 dict 中）
-
-新架構改進點：
-- 不再手工拼裝 RunnableWithMessageHistory，改由編排層
-  core.orchestrator.memory.ConversationManager 統一管理會話歷史，
-  由管理器保存並注入此教學範例的會話歷史；
-- 演示多 session 隔離：同一 ConversationManager 實例按 session_id
-  維護相互獨立的對話上下文；此管理器本身沒有租戶隔離或歷史截短。
-- 平臺 API 使用 platform_api/api.py 與 AgentRuntime，另外提供
-  租戶／Agent／會話隔離、上下文預算及串流。
-
-介面約定：ConversationManager() 無需參數（LLM 由編排層注入），
-非同步方法 achat(message: str, session_id: str = "default") -> str 回傳模型回覆。
-
-執行方式（在 agent-platform 根目錄下）：
-    python examples/03_memory_conversation.py
+此教學管理器使用固定模型；租戶隔離、任務選模與歷史預算由 AgentRuntime 提供。
+執行：uv run python -m examples.03_memory_conversation
 """
 
 import asyncio
@@ -38,11 +22,11 @@ async def chat_round(manager: ConversationManager, session_id: str, message: str
 async def main() -> None:
     manager = ConversationManager()
 
-    print("=== 會話 A：驗證多輪記憶 ===")
+    print("=== 會話 A：多輪記憶 ===")
     await chat_round(manager, "session-a", "你好，我叫小明，請記住我的名字。")
     await chat_round(manager, "session-a", "我剛纔告訴你我叫什麼名字？")
 
-    print("=== 會話 B：驗證 session 隔離 ===")
+    print("=== 會話 B：獨立對話 ===")
     await chat_round(manager, "session-b", "你好！你知道我叫什麼名字嗎？")
 
 

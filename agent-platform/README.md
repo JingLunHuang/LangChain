@@ -74,11 +74,13 @@ uv run omniagent run "把這封 email 改寫成正式文章" --model demo-writer
 uv run python -m examples.01_toolchain_agent
 uv run python -m examples.02_network_diagnosis
 uv run python -m examples.03_memory_conversation
+uv run python -m examples.04_mcp_client
+uv run python -m examples.05_model_routing
 ```
 
 `route` 不呼叫模型；`run` 執行選到的 Agent。`--task` 可明確指定五類任務之一。CLI 為本機操作者入口，每次執行建立新 runtime；跨請求對話使用 API 或持續執行的 MCP Server。
 
-保留的三個範例是原始課程資產；MCP 握手與模型切換的獨立驗證腳本已移除。請透過正式 CLI、API 或 Studio 使用模型路由與對話切換。
+範例 01–03 是原始課程資產；`04_mcp_client.py` 展示原生 MCP stdio 握手、工具 schema 與檢索調用，`05_model_routing.py` 展示五類任務選模、偏好差異與對話模型切換。五個範例在 demo 模式下均不需金鑰。
 
 ## 設定真實模型
 
@@ -206,7 +208,8 @@ agent-platform/
 ├── platform_api/           # API、金鑰管理、Studio HTML
 │   └── static/             # Studio CSS 與 JavaScript
 ├── mcp_server/             # MCP Server / Client
-├── examples/               # 三個課程範例與本機知識資料
+├── examples/               # 五個範例與本機知識資料
+├── tests/                  # 持久化測試套件（pytest，全部離線）
 ├── assets/                 # 介面截圖
 ├── scripts/start-demo.ps1
 ├── models.example.json
@@ -219,11 +222,12 @@ agent-platform/
 ```powershell
 uv run ruff check .
 uv run ruff format --check .
+uv run pytest
 uv build
 ```
 
 API、MCP 與 CLI 共用 `core/model_routing/requests.py` 的請求驗證；上下文準備與 SSE 格式也集中處理。離線 adapter 放在 `core/demo.py`，正式供應商及 BM25 檢索不混入模擬實作。
 
-未保留獨立測試套件、驗證腳本或零散報告。唯一 CI 位於儲存庫根目錄 `.github/workflows/agent-platform.yml`，只執行品質檢查、編譯及打包。
+測試套件位於 `tests/`，112 個測試全部離線（demo 模式），無需任何金鑰。唯一 CI 位於儲存庫根目錄 `.github/workflows/agent-platform.yml`，執行品質檢查、測試、編譯及打包。
 
 授權：[MIT](LICENSE)。

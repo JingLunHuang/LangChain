@@ -161,7 +161,7 @@ PagedAttention、GPU 記憶體和 KV Cache 由推理引擎管理。本專案實�
 | 四：作品與發布準備 | Studio、README／總覽、MIT、唯一 CI、乾淨原始碼目錄 | 未推送 GitHub、未執行遠端 Actions、未部署公開服務 |
 | 本次追加：模型切換與任務選模 | 模型目錄、供應商 adapter、規則／限制／偏好、對話切換與紀錄 | 未訓練路由模型、未證實任一真實模型是特定任務的最佳選擇 |
 
-依整理要求刪除獨立測試檔案、驗證用展示腳本、暫存測試輸出及重複報告，主要文件維持兩份；根 README 是作品入口。保留三個原始課程範例，CI 僅做品質、編譯與打包檢查。
+主要文件維持兩份；根 README 是作品入口。測試套件已恢復為持久化資產：`tests/` 覆蓋五層與模型路由共 112 個離線測試（demo 模式，無需金鑰），CI 執行品質、測試、編譯與打包檢查。範例除三個原始課程範例外，`04_mcp_client.py` 與 `05_model_routing.py` 展示 MCP 互聯與模型路由。
 
 ## 開發者筆記與範例來源
 
@@ -172,8 +172,10 @@ PagedAttention、GPU 記憶體和 KV Cache 由推理引擎管理。本專案實�
 | `01_toolchain_agent.py` | 工具型 Agent 的課程起點 |
 | `02_network_diagnosis.py` | 模擬診斷流程與 MCP 工具形式 |
 | `03_memory_conversation.py` | 基礎對話記憶及 CLI 互動 |
+| `04_mcp_client.py` | 原生 MCP stdio 握手、工具 schema 與檢索調用 |
+| `05_model_routing.py` | 五類選模預覽、偏好差異、對話固定與恢復自動路由 |
 
-範例 01–03 透過模型目錄選擇初始模型，保留各自的課程流程；逐次任務路由與共用上下文政策由正式 `AgentRuntime`、CLI、API 及 MCP 提供。MCP、LangChain、LlamaIndex、BM25／RRF 的既有概念與實作各有上游來源，個人貢獻是平台組合與政策設計。
+範例 01–03 透過模型目錄選擇初始模型，保留各自的課程流程；04 以子程序啟動 MCP Server 做真實協議握手，05 直接操作 `ModelRouter` 與 `AgentRuntime` 展示決策依據；逐次任務路由與共用上下文政策由正式 `AgentRuntime`、CLI、API 及 MCP 提供。MCP、LangChain、LlamaIndex、BM25／RRF 的既有概念與實作各有上游來源，個人貢獻是平台組合與政策設計。
 
 ## 本機驗證記錄
 
@@ -187,5 +189,7 @@ PagedAttention、GPU 記憶體和 KV Cache 由推理引擎管理。本專案實�
 - Ruff 品質／格式、鎖定依賴、套件建置與內容檢查。
 
 2026-09-29 整理程式時，移除兩個驗證腳本及診斷除錯列印，統一三個入口的請求驗證、上下文建立與 SSE 格式，並分離離線 adapter 與網頁資源。再次驗證五類選模、對話歷史、索引重用、租戶隔離、三種 MCP 傳輸、CLI、原始範例及網頁資源；驗證以暫時執行的程式進行，不留下測試檔案或新增報告。
+
+2026-09-29 補齊工程化缺口：恢復 `tests/` 持久化測試套件（112 個測試全部離線、pytest 全綠，覆蓋模型路由、上下文優化、資料引擎、編排層、接入層 API 與 MCP 協議層），並恢復 `04_mcp_client.py`、`05_model_routing.py` 兩個展示範例（均實際運行驗證）；CI 增加 pytest 步驟，`uv.lock` 同步更新。
 
 Claude／Gemini 原生 adapter 依官方介面實作，未在此環境安裝選用 SDK，沒有實際連線驗證。DashScope 與其他真實模型、GPU 效能、公開部署及遠端 CI 結果也未驗證。本機模擬驗證能證明整合流程和供應商請求切換，不能推導真實模型的效果或效能。

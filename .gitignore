@@ -22,7 +22,6 @@ htmlcov/
 .state/
 reports/
 .local-archive/
-/agent-platform-github.zip
 
 # 作業系統與編輯器
 .DS_Store

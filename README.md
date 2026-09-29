@@ -20,4 +20,6 @@ powershell -ExecutionPolicy Bypass -File .\scripts\start-demo.ps1
 - [PROJECT_OVERVIEW：架構、個人設計、規劃對照與驗證邊界](agent-platform/PROJECT_OVERVIEW.md)
 - [MIT 授權](agent-platform/LICENSE)
 
+原始碼位於 `agent-platform/`，可直接在資料夾內修改與檢查。檢查完成後，上傳整個儲存庫即可保留根目錄的 `.github/workflows/agent-platform.yml`。
+
 主要文件維持兩份，保留三個原始課程範例及一份根目錄 CI。金鑰、環境、快取、備份與建置產物由 `.gitignore` 排除。

@@ -193,14 +193,16 @@ uv run python -m mcp_server.server --transport streamable-http --port 8001
 
 ## 精簡目錄與開發
 
+直接在本目錄修改原始碼並檢查。上傳 GitHub 時請保留上一層的根 README、`.gitignore` 與 `.github/`，讓作品入口及 CI 一併生效。
+
 ```text
 agent-platform/
 ├── core/
 │   ├── model_routing/       # OmniRoute 策略、模型目錄、adapter、CLI
 │   ├── orchestrator/        # 共用對話與 LangChain 執行
 │   ├── data_engine/         # LlamaIndex 向量 + BM25 + RRF
-│   └── cache_optimizer/     # 固定前綴、壓縮與預算
-│   # demo.py 僅供明確啟用的離線操作模式
+│   ├── cache_optimizer/     # 固定前綴、壓縮與預算
+│   └── demo.py              # 僅供明確啟用的離線操作模式
 ├── platform_api/           # API、金鑰管理、Studio HTML
 │   └── static/             # Studio CSS 與 JavaScript
 ├── mcp_server/             # MCP Server / Client

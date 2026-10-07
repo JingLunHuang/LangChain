@@ -38,6 +38,7 @@
             <button id="run" class="button primary" disabled>執行並串流</button>
             <button id="stop" class="button" hidden>停止</button>
           </div>
+          <label class="review-toggle" for="review"><input id="review" type="checkbox">以 Jev 與獨立模型審查回答（完成後顯示）</label>
           <p class="help">預覽不呼叫模型。示範分數為能力設定，並非供應商的實測排名。</p>
           <div class="field-grid">
             <div><label for="session">對話 ID（選填）</label><input id="session" maxlength="128" placeholder="執行後自動建立"></div>
@@ -64,6 +65,10 @@
         <section class="card output">
           <div class="card-head"><h2>Agent 回應</h2><span class="step">03 / EXECUTE</span></div>
           <div class="card-body"><pre id="output">連接平台後，可用同一份策略執行 Agent 並查看串流。</pre></div>
+        </section>
+        <section id="reviewPanel" class="card output" hidden>
+          <div class="card-head"><h2>多來源評估</h2><span class="step">04 / REVIEW</span></div>
+          <div class="card-body"><strong id="reviewStatus"></strong><div id="reviewOpinions"></div></div>
         </section>
       </div>
     </div>

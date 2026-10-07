@@ -19,7 +19,7 @@ from pydantic import BaseModel, Field
 
 from core.cache_optimizer.optimizer import ContextBudgetError
 from core.model_routing.profiles import ModelCatalog
-from core.model_routing.requests import InvokeRequest, SwitchRequest
+from core.model_routing.requests import InvokeRequest, ReviewRequest, SwitchRequest
 from core.model_routing.router import RoutingError
 from core.orchestrator.runtime import AgentRuntime, Session
 from mcp_server.client import MCPConnection, as_langchain_tools, connect
@@ -175,6 +175,23 @@ def create_app(
     ) -> list[dict[str, Any]]:
         return service.route_traces(tenant.tenant_id, limit)
 
+    @application.post("/v1/review")
+    async def review_output(
+        req: ReviewRequest, tenant: Tenant = Depends(current_tenant)
+    ) -> dict[str, Any]:
+        try:
+            service.resolve(tenant.tenant_id, req.agent_id)
+        except KeyError as exc:
+            raise HTTPException(404, "Unknown or unavailable agent") from exc
+        report = await service.reviewer.review(
+            tenant=tenant.tenant_id,
+            producer_model=req.producer_model,
+            message=req.message,
+            answer=req.answer,
+            task=req.task,
+        )
+        return report.model_dump()
+
     @application.post("/v1/invoke")
     async def invoke(
         req: InvokeRequest, tenant: Tenant = Depends(current_tenant)
@@ -187,6 +204,7 @@ def create_app(
                 sid,
                 state,
                 req.message,
+                review=req.review,
                 **req.routing(),
             )
         except RoutingError as exc:
@@ -202,12 +220,15 @@ def create_app(
             "session_id": sid,
             "tenant_id": tenant.tenant_id,
             "route": result.route.model_dump(),
+            "review": result.review.model_dump() if result.review else None,
         }
 
     @application.post("/v1/stream")
     async def stream(
         req: InvokeRequest, tenant: Tenant = Depends(current_tenant)
     ) -> StreamingResponse:
+        if req.review:
+            raise HTTPException(422, "Reviewed output requires /v1/invoke")
         sid, state = resolve(req, tenant)
         try:
             decision = service.plan(

@@ -15,6 +15,7 @@ from uuid import uuid4
 
 from core.cache_optimizer.optimizer import ContextOptimizer, estimate_tokens
 from core.data_engine.engine import DEFAULT_DOCS_PATH, abuild_query_engine, as_langchain_tool
+from core.decision_review import DecisionReviewer, ReviewReport
 from core.model_routing.profiles import ModelCatalog, ModelProfile, Preference, TaskType
 from core.model_routing.providers import build_chat_model
 from core.model_routing.router import ModelRouter, RouteDecision
@@ -40,6 +41,7 @@ class Session:
 class InvocationResult:
     output: str
     route: RouteDecision
+    review: ReviewReport | None = None
 
 
 class AgentRuntime:
@@ -50,6 +52,7 @@ class AgentRuntime:
         ttl: float = 3600,
         catalog: ModelCatalog | None = None,
         model_factory: Callable[[ModelProfile], Any] = build_chat_model,
+        reviewer: DecisionReviewer | None = None,
     ) -> None:
         self.configs: dict[str, dict[str, Any]] = {
             "default": {
@@ -68,6 +71,7 @@ class AgentRuntime:
         self.catalog = catalog or ModelCatalog.from_environment()
         self.router = ModelRouter(self.catalog)
         self.model_factory = model_factory
+        self.reviewer = reviewer or DecisionReviewer(self.catalog, model_factory)
         self.external_tools: list[Any] = []
         self.sessions: OrderedDict[tuple[str, str, str], Session] = OrderedDict()
         self.agents: dict[tuple[str, str, str], Any] = {}
@@ -244,6 +248,7 @@ class AgentRuntime:
         route: RouteDecision,
         start: float,
         status: str,
+        review_status: str | None = None,
     ) -> None:
         config = self.resolve(tenant, agent_id)
         prefix = self.context_optimizer(config).build_prefix()
@@ -262,6 +267,7 @@ class AgentRuntime:
                 "mode": route.mode,
                 "preference": route.preference,
                 "status": status,
+                "review_status": review_status,
                 "duration_ms": round((monotonic() - start) * 1000, 2),
                 "prefix_fingerprint": fingerprint,
             }
@@ -277,6 +283,7 @@ class AgentRuntime:
         sid: str,
         state: Session,
         message: str,
+        review: bool = False,
         **routing: Any,
     ) -> InvocationResult:
         async with state.lock:
@@ -291,6 +298,55 @@ class AgentRuntime:
                 )
                 agent = await self.agent(tenant, agent_id, self.catalog.profiles[route.model_id])
                 answer = await ainvoke_agent(agent, messages)
+                report = None
+                if review:
+                    report = await self.reviewer.review(
+                        tenant=tenant,
+                        producer_model=route.model_id,
+                        message=message,
+                        answer=answer,
+                        task=route.task.task,
+                    )
+                    if report.status == "needs_revision":
+                        feedback = (
+                            "Revise your previous answer once. Address these review dimensions: "
+                            + ", ".join(report.weak_axes)
+                            + ". Meet the user's request. Do not mention this internal review."
+                        )
+                        revision_messages = [
+                            *messages,
+                            {"role": "assistant", "content": answer},
+                            {"role": "user", "content": feedback},
+                        ]
+                        if estimate_tokens(revision_messages) <= route.input_budget:
+                            report.revision_attempted = True
+                            try:
+                                # 修訂直接呼叫聊天模型，避免再次執行有副作用的工具。
+                                response = await asyncio.wait_for(
+                                    self.model_factory(
+                                        self.catalog.profiles[route.model_id]
+                                    ).ainvoke(revision_messages),
+                                    timeout=60,
+                                )
+                                candidate = (
+                                    response.content if isinstance(response.content, str) else ""
+                                )
+                                if not candidate.strip():
+                                    raise ValueError("Empty revision")
+                                second = await self.reviewer.review(
+                                    tenant=tenant,
+                                    producer_model=route.model_id,
+                                    message=message,
+                                    answer=candidate,
+                                    task=route.task.task,
+                                )
+                                if second.status == "approved":
+                                    answer = candidate
+                                    report = second
+                                    report.revision_attempted = True
+                                    report.revision_accepted = True
+                            except Exception:
+                                report.unavailable_sources.append("revision_failed")
                 self.commit(state, message, answer)
             except asyncio.CancelledError:
                 self._record(tenant, agent_id, sid, route, start, "cancelled")
@@ -298,8 +354,10 @@ class AgentRuntime:
             except Exception:
                 self._record(tenant, agent_id, sid, route, start, "failed")
                 raise
-            self._record(tenant, agent_id, sid, route, start, "completed")
-            return InvocationResult(output=answer, route=route)
+            self._record(
+                tenant, agent_id, sid, route, start, "completed", report.status if report else None
+            )
+            return InvocationResult(output=answer, route=route, review=report)
 
     async def invoke(
         self,

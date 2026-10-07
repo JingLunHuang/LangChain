@@ -35,6 +35,8 @@ def parser() -> argparse.ArgumentParser:
             "--task", choices=["general", "coding", "reasoning", "writing", "knowledge"]
         )
         operation.add_argument("--max-cost-tier", type=int, choices=[1, 2, 3], default=3)
+        if name == "run":
+            operation.add_argument("--review", action="store_true", help="以多個判斷來源審查回答")
     return command
 
 
@@ -46,6 +48,7 @@ async def execute(args: argparse.Namespace) -> Any:
         preference=args.preference,
         task=args.task,
         max_cost_tier=args.max_cost_tier,
+        review=getattr(args, "review", False),
     )
     runtime = AgentRuntime()
     if args.command == "route":
@@ -54,9 +57,20 @@ async def execute(args: argparse.Namespace) -> Any:
         ).model_dump()
     sid, state = runtime.session("cli-local", request.agent_id, request.session_id)
     result = await runtime.invoke_with_route(
-        "cli-local", request.agent_id, sid, state, request.message, **request.routing()
+        "cli-local",
+        request.agent_id,
+        sid,
+        state,
+        request.message,
+        review=request.review,
+        **request.routing(),
     )
-    return {"output": result.output, "session_id": sid, "route": result.route.model_dump()}
+    return {
+        "output": result.output,
+        "session_id": sid,
+        "route": result.route.model_dump(),
+        "review": result.review.model_dump() if result.review else None,
+    }
 
 
 def main() -> int:

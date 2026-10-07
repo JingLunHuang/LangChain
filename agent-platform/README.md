@@ -1,6 +1,6 @@
 # OmniAgent Platform · OmniRoute
 
-**依任務選模的 MCP Agent 平台：獨立路由策略 × LangChain 執行 × LlamaIndex 混合檢索 × KV Cache 感知上下文管理。**
+**依任務選模並審查回答的 MCP Agent 平台：獨立路由策略 × LangChain 執行 × Jev 決策評估 × LlamaIndex 混合檢索。**
 
 Python 3.11+ · uv · FastAPI · 原生 MCP Server / Client · MIT
 
@@ -15,8 +15,9 @@ OmniRoute 把「這個任務用哪個模型」變成平台中可設定、可預�
 | 模型 | 程式啟動時建立一個模型 | 獨立目錄、多供應商 adapter、逐次任務選模 |
 | 切換 | 修改程式或環境設定 | 單次指定、對話固定、恢復自動選模，保留歷史 |
 | 決策 | 範例常省略選擇依據 | 預覽任務訊號、候選評分、排除原因與選擇理由 |
+| 回答評估 | 通常直接交付一次生成結果 | Jev 三項獨立判斷，可加入不同模型形成共識與一次受控修訂 |
 | 資料 | 單一 retriever | LlamaIndex 向量 + BM25 + RRF，重用租戶索引 |
-| 入口 | Python 腳本 | Studio、API、CLI、七個原生 MCP 工具 |
+| 入口 | Python 腳本 | Studio、API、CLI、八個原生 MCP 工具 |
 | 上下文 | 直接累加訊息 | 固定前綴、依模型容量計算預算、壓縮舊歷史 |
 
 ```mermaid
@@ -34,6 +35,8 @@ flowchart LR
         Models --> Execute
         Execute --> Index[LlamaIndex 檢索]
         Execute --> Protocol[外部 MCP 工具]
+        Execute --> Review[DecisionReviewer / Jev + 獨立模型]
+        Review --> Outcome[共識 / 分歧 / 一次修訂]
     end
 ```
 
@@ -71,6 +74,7 @@ uv run omniagent models
 uv run omniagent route "請用 Python 寫一個非同步函式" --preference quality
 uv run omniagent route "請證明這個數學命題" --max-cost-tier 2
 uv run omniagent run "把這封 email 改寫成正式文章" --model demo-writer
+uv run omniagent run "說明這個設計的限制" --review
 uv run python -m examples.01_toolchain_agent
 uv run python -m examples.02_network_diagnosis
 uv run python -m examples.03_memory_conversation
@@ -162,11 +166,20 @@ Invoke-RestMethod 'http://127.0.0.1:8000/v1/sessions/model' -Method Post -Header
 | `GET /v1/agents`、`GET /v1/models` | 租戶可見目錄；`X-API-Key` |
 | `POST /v1/route` | 預覽決策並取得 session ID；`X-API-Key` |
 | `POST /v1/invoke`、`POST /v1/stream` | 執行／SSE；`X-API-Key` |
+| `POST /v1/review` | 審查既有回答；`X-API-Key` |
 | `POST /v1/sessions/model` | 固定模型、偏好與成本上限；`X-API-Key` |
 | `GET /v1/routing/traces` | 該租戶最近決策；`X-API-Key` |
 | `POST /v1/keys`、`GET /v1/keys`、`DELETE /v1/keys/{id}` | 發行／查詢／撤銷；`X-Admin-Key` |
 
 SSE 依序傳送 `session`、`route`、文字 delta 與 `[DONE]`；`route` 是實際執行時的決策。失敗會傳送 `error`，不傳送成功終止標記、不提交歷史。系統不會在工具可能產生副作用後自動換供應商重跑。
+
+## Jev 多來源回答審查
+
+`awesome-jev` 是 [Jev 生態資源清單](https://github.com/yibie/awesome-jev)，實際判斷服務採 [TypeSafe AI 官方 System One API](https://docs.typesafe.ai/api)。在 `.env` 設定 `TYPESAFE_API_KEY`，並把 `AGENT_PLATFORM_REVIEWER_MODELS` 設為模型目錄中的另一個 ID（例如 `code-specialist`）；推薦使用與回答模型不同的供應商。可用 `TYPESAFE_MODEL` 固定 Jev 版本。未設定時不會假裝已通過審查。
+
+`POST /v1/invoke` 加入 `"review": true`，或在 Studio 勾選「審查回答」，會以同一份請求和回答評估意圖吻合、完成度與清晰度。Jev 一次回傳三個 Noul 判斷；最多兩個其他模型各自回傳意見。只有至少兩個不同模型都通過才標記 `approved`；至少兩個認為不足時，原回答模型可在不重新執行工具的情況下修訂一次，修訂後仍需重新通過共識。意見衝突、單一來源或服務未設定會明確回傳 `disagreement`、`single_source` 或 `unavailable`。`POST /v1/review` 可審查既有回答；CLI 使用 `run --review`，MCP 使用 `agent_invoke(review=true)` 或 `agent_review`。
+
+審查會將請求和回答傳送給明確啟用的評估供應商，可能增加費用與延遲；因此預設關閉，且串流 `/v1/stream` 不提供修訂（已送出的文字無法撤回）。這些數值是模型判斷與示範閾值，未經本專案校準；沒有外部證據時不代表事實正確，也不能保證符合每位使用者的期待。離線示範若無評估供應商，會如實顯示 `unavailable`。
 
 ## 原生 MCP
 
@@ -175,7 +188,7 @@ $env:AGENT_PLATFORM_DEMO = '1'
 uv run python -m mcp_server.server --transport stdio
 ```
 
-七個工具：`ping`、`hybrid_retrieve`、`model_catalog`、`route_preview`、`model_switch`、`agent_invoke`、`routing_traces`。另外提供 `info://server` Resource 與 `diagnose` Prompt。
+八個工具：`ping`、`hybrid_retrieve`、`model_catalog`、`route_preview`、`model_switch`、`agent_invoke`、`agent_review`、`routing_traces`。另外提供 `info://server` Resource 與 `diagnose` Prompt。
 
 網路傳輸需設定獨立 `PLATFORM_MCP_KEY`，由 Client 在 `X-API-Key` 傳入：
 
@@ -204,6 +217,7 @@ agent-platform/
 │   ├── orchestrator/        # 共用對話與 LangChain 執行
 │   ├── data_engine/         # LlamaIndex 向量 + BM25 + RRF
 │   ├── cache_optimizer/     # 固定前綴、壓縮與預算
+│   ├── decision_review.py   # Jev、多模型意見與共識政策
 │   └── demo.py              # 僅供明確啟用的離線操作模式
 ├── platform_api/           # API、金鑰管理、Studio HTML
 │   └── static/             # Studio CSS 與 JavaScript
@@ -228,6 +242,6 @@ uv build
 
 API、MCP 與 CLI 共用 `core/model_routing/requests.py` 的請求驗證；上下文準備與 SSE 格式也集中處理。離線 adapter 放在 `core/demo.py`，正式供應商及 BM25 檢索不混入模擬實作。
 
-測試套件位於 `tests/`，112 個測試全部離線（demo 模式），無需任何金鑰。唯一 CI 位於儲存庫根目錄 `.github/workflows/agent-platform.yml`，執行品質檢查、測試、編譯及打包。
+測試套件位於 `tests/`，116 個測試全部離線（demo 模式），無需任何金鑰。唯一 CI 位於儲存庫根目錄 `.github/workflows/agent-platform.yml`，執行品質檢查、測試、編譯及打包。
 
 授權：[MIT](LICENSE)。

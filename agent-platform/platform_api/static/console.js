@@ -22,7 +22,7 @@ function status(message, error = false) {
 }
 function busy(value) {
   state.busy = value;
-  ['preview','connect','disconnect','model','preference','agent','costTier','message','session'].forEach(id => $(id).disabled = value);
+  ['preview','connect','disconnect','model','preference','agent','costTier','message','session','review'].forEach(id => $(id).disabled = value);
   $('run').disabled = value || !state.key;
   $('pin').disabled = value || !state.key || !$('session').value;
   $('stop').hidden = !value || !state.controller;
@@ -47,7 +47,21 @@ function payload() {
   const model = $('model').value;
   const message = $('message').value;
   if (!message.trim()) throw new Error('請先輸入任務。');
-  return { message, agent_id:$('agent').value, model_id:model === state.pinned ? null : model, preference:$('preference').value, max_cost_tier:Number($('costTier').value), session_id:$('session').value || null };
+  return { message, agent_id:$('agent').value, model_id:model === state.pinned ? null : model, preference:$('preference').value, max_cost_tier:Number($('costTier').value), session_id:$('session').value || null, review:$('review').checked };
+}
+function showReview(report) {
+  $('reviewPanel').hidden = false;
+  const labels = { approved:'多個獨立來源一致通過', needs_revision:'多個來源認為仍需修訂', disagreement:'判斷分歧，請自行確認', single_source:'僅一個來源，尚無共識', unavailable:'尚未取得模型評估' };
+  $('reviewStatus').textContent = labels[report.status] || report.status;
+  $('reviewOpinions').replaceChildren();
+  for (const opinion of report.opinions) {
+    const row = node('div', 'review-opinion');
+    const scores = Object.entries(opinion.scores).map(([axis, value]) => axis + ' ' + Math.round(value * 100) + '%').join(' · ');
+    row.append(node('strong', '', opinion.source + ' / ' + opinion.model_id), node('small', '', scores));
+    $('reviewOpinions').append(row);
+  }
+  if (report.revision_accepted) $('reviewOpinions').append(node('small', '', '已自動修訂一次，並由多個來源重新審查通過。'));
+  if (report.unavailable_sources.length) $('reviewOpinions').append(node('small', '', '部分評估來源未設定或暫時無法使用。'));
 }
 async function loadModels() {
   const path = state.key ? '/v1/models?agent_id=' + encodeURIComponent($('agent').value) : '/demo/models';
@@ -135,9 +149,19 @@ async function pin() {
 }
 async function run() {
   if (!state.key) return;
-  state.controller = new AbortController(); busy(true); $('output').textContent = '';
+  state.controller = new AbortController(); busy(true); $('output').textContent = ''; $('reviewPanel').hidden = true;
   status('正在執行 Agent…'); let completed = false;
   try {
+    if ($('review').checked) {
+      status('正在產生回答並收集獨立評估…');
+      const response = await request('/v1/invoke', payload(), state.key, state.controller.signal);
+      const result = await response.json();
+      $('session').value = result.session_id; showDecision(result.route);
+      $('output').textContent = result.output;
+      showReview(result.review);
+      status('回答與評估完成；評估不能保證事實正確。');
+      return;
+    }
     const response = await request('/v1/stream', payload(), state.key, state.controller.signal);
     const reader = response.body.getReader(); const decoder = new TextDecoder(); let buffer = '';
     function frame(text) {

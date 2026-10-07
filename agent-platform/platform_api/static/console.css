@@ -40,6 +40,10 @@ textarea { min-height:135px; resize:vertical; line-height:1.7; }
 .button.primary { background:var(--orange); color:#fff; border-color:var(--orange); }
 .button.dark { background:var(--ink); color:#fff; border-color:var(--ink); }
 .help { font-size:12px; color:var(--muted); margin-top:12px; }
+.review-toggle { display:flex; align-items:center; gap:9px; margin-top:14px; font-weight:400; }
+.review-toggle input { width:auto; }
+.review-opinion { padding:10px 0; border-top:1px solid var(--line); font-size:13px; }
+.review-opinion small { display:block; color:var(--muted); }
 .connection { margin-top:22px; padding:18px 24px; background:#eef1e8; border-top:1px solid var(--line); }
 .connect-row { display:flex; gap:10px; }
 .connect-row input { min-width:0; width:0; flex:1; }

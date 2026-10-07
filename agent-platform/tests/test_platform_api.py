@@ -23,6 +23,8 @@ DEMO_MODEL_IDS = {"demo-fast", "demo-coder", "demo-reasoner", "demo-writer"}
 @pytest.fixture()
 def client(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Iterator[TestClient]:
     monkeypatch.setenv("AGENT_PLATFORM_DEMO", "1")
+    monkeypatch.delenv("TYPESAFE_API_KEY", raising=False)
+    monkeypatch.setenv("AGENT_PLATFORM_REVIEWER_MODELS", "")
     monkeypatch.setenv("PLATFORM_ADMIN_KEY", ADMIN_KEY)
     monkeypatch.setenv("PLATFORM_API_KEYS", f"{BOOTSTRAP_KEY}:bootstrap")
     monkeypatch.setenv("PLATFORM_KEY_DB", str(tmp_path / "keys.sqlite3"))
@@ -75,6 +77,26 @@ def test_invoke_rejects_missing_or_invalid_key(client: TestClient) -> None:
         client.post("/v1/invoke", json=payload, headers=auth_headers("ap_forged")).status_code
         == 401
     )
+
+
+def test_review_is_explicit_and_unavailable_is_not_approval(client: TestClient) -> None:
+    request = {"message": "請說明平台", "agent_id": "chat", "review": True}
+    response = client.post("/v1/invoke", json=request, headers=BOOTSTRAP_HEADERS)
+    assert response.status_code == 200
+    report = response.json()["review"]
+    assert report["status"] == "unavailable"
+    assert report["opinions"] == []
+    assert response.json()["output"]
+    assert client.post("/v1/stream", json=request, headers=BOOTSTRAP_HEADERS).status_code == 422
+
+    direct = client.post(
+        "/v1/review",
+        json={"message": "請說明平台", "answer": "平台有 API", "agent_id": "chat"},
+        headers=BOOTSTRAP_HEADERS,
+    )
+    assert direct.status_code == 200
+    assert direct.json()["status"] == "unavailable"
+    assert client.post("/v1/review", json={"message": "x", "answer": "y"}).status_code == 401
 
 
 def test_admin_issues_tenant_key_and_invoke_returns_route(client: TestClient) -> None:

@@ -4,7 +4,7 @@
 
 ## 定位與個人設計
 
-**OmniAgent 是以 OmniRoute 為控制核心的多模型 Agent 平台。** 任務先經分類與模型政策判斷，選定模型後才準備上下文、建立 LangChain Agent 並執行工具。路由和資料索引各有清楚邊界，同一份 runtime 服務 API、CLI 與 MCP。
+**OmniAgent 是以 OmniRoute 為控制核心的多模型 Agent 平台。** 任務先經分類與模型政策判斷，選定模型後才準備上下文、建立 LangChain Agent 並執行工具；選用的 DecisionReviewer 再獨立評估回答。路由、評估與資料索引各有邊界，同一份 runtime 服務 API、CLI 與 MCP。
 
 CC Switch 提供多供應商設定管理、切換和本機代理功能，是「切換模型供應商」操作概念的參考。本專案自行實作 Python 模型目錄、任務規則、候選評分與對話政策，未接管 CC Switch 或其他桌面工具的設定檔。[CC Switch 官方說明](https://github.com/farion1231/cc-switch/blob/main/README.md)
 
@@ -15,9 +15,10 @@ LangChain 是成熟的 Agent 編排框架，本身可擴充動態模型。這份
 | 如何知道該用哪個模型？ | 先辨識任務、排除不合條件模型，再評分 | `core/model_routing/router.py` |
 | 如何切換且保留前文？ | 單次覆寫與持續對話設定分開管理 | `core/orchestrator/runtime.py` |
 | 換模型要重新建索引嗎？ | 資料工具按租戶／Agent 快取，執行 Agent 按模型快取 | 同一 runtime 的 `tools`／`agents` |
-| 是否可從其他工具使用？ | API、CLI、MCP 共用策略與執行核心 | API 端點、`omniagent`、七個 MCP 工具 |
+| 是否可從其他工具使用？ | API、CLI、MCP 共用策略與執行核心 | API 端點、`omniagent`、八個 MCP 工具 |
 | 選模能否解釋？ | 回傳任務來源、候選分數、排除原因及執行紀錄 | `RouteDecision`、`routing_traces` |
 | 能否照顧推理效率？ | 保持前綴穩定，依模型容量計算歷史預算 | `ContextOptimizer` 與 `input_budget` |
+| 回答是否符合使用者要求？ | Jev 與其他模型分開評估三個面向，按政策彙整 | `DecisionReviewer`、`/v1/review`、`agent_review` |
 
 ## 整體架構
 
@@ -44,6 +45,10 @@ flowchart TB
     RRF --> Agent
     Agent --> Bridge[MCP Client / JSON Schema adapter]
     Bridge --> External[外部 MCP 工具]
+    Agent --> Review[DecisionReviewer / 回答評估]
+    Review --> Jev[Jev / 三個獨立判斷]
+    Review --> Judges[其他已配置的聊天模型]
+    Review --> Consensus[共識政策 / 最多一次無工具修訂]
     Providers --> Backend[模型服務 / 自行部署推理引擎]
     Backend --> GPU[推理引擎管理 KV Cache]
     Runtime --> Trace[租戶範圍路由紀錄]
@@ -94,6 +99,14 @@ API 的 `/v1/route` 與 MCP 的 `route_preview` 只做預覽。真正執行會�
 
 近期紀錄最多 512 筆：租戶、Agent、session、decision ID、模型、任務、偏好、狀態、耗時和固定前綴指紋。紀錄不保存問題、回答、金鑰或供應商端點；這是本機排查資料，未取代持久化稽核系統。
 
+## 多來源回答評估
+
+[awesome-jev](https://github.com/yibie/awesome-jev) 提供 Jev 生態參考；本專案直接採 [TypeSafe AI 官方 API](https://docs.typesafe.ai/api) 的 typed `noul` 問題。Jev 對同一份請求與回答分別判斷意圖、完成度和清晰度；另可由模型目錄指定最多兩個不同的聊天模型，各自獨立評分。評估器跳過回答模型及重複底層模型，不把同一份模型輸出計算為多個來源。
+
+每個面向使用示範閾值 `0.75`；至少兩個可用來源且全部通過才標記 `approved`，至少兩個未通過則標記 `needs_revision`，其餘明示 `disagreement`、`single_source` 或 `unavailable`。只有 `needs_revision` 會嘗試一次修訂；修訂直接呼叫原聊天模型，不重新執行 MCP 或檢索工具。只有修訂稿重新達到 `approved` 才採用，對話歷史只提交最終回答。結果包含各來源的分項值、弱項、缺席來源及修訂狀態，路由紀錄只保存狀態。
+
+評估需由呼叫者明確啟用，資料才會傳送至已配置的供應商。同步 `/v1/invoke`、獨立 `/v1/review`、CLI 和 MCP 提供此功能；串流保持原本即時輸出，因此不承諾事後修訂已送出的文字。Jev 問題雖獨立，仍出自同一個模型；其他聊天模型的 0–1 分數也未校準，不能直接解讀為正確率。沒有外部證據的評估無法驗證事實正確性；改善使用者滿意度與減少往返次數仍需真實任務資料量測。
+
 ## 模組與生命週期
 
 | 模組 | 責任 |
@@ -105,6 +118,7 @@ API 的 `/v1/route` 與 MCP 的 `route_preview` 只做預覽。真正執行會�
 | `core/model_routing/cli.py` | 本機模型目錄、預覽及執行命令 |
 | `core/orchestrator/runtime.py` | 對話、路由、索引重用、執行與串流生命週期 |
 | `core/orchestrator/agent.py` | LangChain 建立 Agent、工具執行與文字串流 |
+| `core/decision_review.py` | Jev、獨立模型意見、評估狀態及共識政策 |
 | `core/data_engine/` | LlamaIndex 索引、BM25、RRF 與選用摘要 |
 | `core/cache_optimizer/` | 固定前綴、輸入估算、歷史壓縮與超限拒絕 |
 | `core/demo.py` | 明確啟用的離線聊天與向量 adapter |
@@ -127,7 +141,7 @@ QueryEngine 使用 `NoText` 回傳來源摘錄與檢索分數，由已選定的 
 
 `AGENT_PLATFORM_TENANT_DOCS` 可指定各租戶資料目錄；一旦啟用租戶映射，未配置的租戶不會退回共用目錄。直接 MCP 檢索採操作者設定的資料路徑，與 API 租戶 Agent 的索引範圍不同。
 
-MCP Python SDK v1 提供 stdio、SSE、Streamable HTTP；七個工具使用共用路由與 runtime，另有 `info://server` 及 `diagnose` 擴充入口。外部 MCP 工具保留 JSON Schema 並加 namespace，API 透過持續存在的連線生命週期使用它們。stdio 的 stdout 只輸出協議，日誌寫入 stderr；網路模式以獨立 `PLATFORM_MCP_KEY` 鑑權。
+MCP Python SDK v1 提供 stdio、SSE、Streamable HTTP；八個工具使用共用路由與 runtime，另有 `info://server` 及 `diagnose` 擴充入口。外部 MCP 工具保留 JSON Schema 並加 namespace，API 透過持續存在的連線生命週期使用它們。stdio 的 stdout 只輸出協議，日誌寫入 stderr；網路模式以獨立 `PLATFORM_MCP_KEY` 鑑權。
 
 ## KV Cache 感知上下文
 
@@ -160,8 +174,9 @@ PagedAttention、GPU 記憶體和 KV Cache 由推理引擎管理。本專案實�
 | 三：上下文與效能 | 穩定前綴、摘要接口、歷史預算、串流共用與超限拒絕 | 沒有無損壓縮保證、每步工具預算、GPU cache 控制或實測效能 |
 | 四：作品與發布準備 | Studio、README／總覽、MIT、唯一 CI、乾淨原始碼目錄 | 未推送 GitHub、未執行遠端 Actions、未部署公開服務 |
 | 本次追加：模型切換與任務選模 | 模型目錄、供應商 adapter、規則／限制／偏好、對話切換與紀錄 | 未訓練路由模型、未證實任一真實模型是特定任務的最佳選擇 |
+| 本次追加：Jev 決策評估 | 多面向 typed 判斷、不同模型意見、共識與一次無工具修訂 | 未以真實 Jev 金鑰驗證準確率，也未實測減少對話往返 |
 
-主要文件維持兩份；根 README 是作品入口。測試套件已恢復為持久化資產：`tests/` 覆蓋五層與模型路由共 112 個離線測試（demo 模式，無需金鑰），CI 執行品質、測試、編譯與打包檢查。範例除三個原始課程範例外，`04_mcp_client.py` 與 `05_model_routing.py` 展示 MCP 互聯與模型路由。
+主要文件維持兩份；根 README 是作品入口。`tests/` 目前有 116 個離線測試（demo 模式，無需金鑰），CI 執行品質、測試、編譯與打包檢查。範例除三個原始課程範例外，`04_mcp_client.py` 與 `05_model_routing.py` 展示 MCP 互聯與模型路由。
 
 ## 開發者筆記與範例來源
 
@@ -189,6 +204,8 @@ PagedAttention、GPU 記憶體和 KV Cache 由推理引擎管理。本專案實�
 - Ruff 品質／格式、鎖定依賴、套件建置與內容檢查。
 
 2026-09-29 整理程式時，移除兩個驗證腳本及診斷除錯列印，統一三個入口的請求驗證、上下文建立與 SSE 格式，並分離離線 adapter 與網頁資源。再次驗證五類選模、對話歷史、索引重用、租戶隔離、三種 MCP 傳輸、CLI、原始範例及網頁資源；驗證以暫時執行的程式進行，不留下測試檔案或新增報告。
+
+2026-10-08 加入 `DecisionReviewer`：以 TypeSafe Jev 的三個 typed Noul 問題，加上最多兩個不同聊天模型的獨立意見，產生 `approved`、`needs_revision`、`disagreement`、`single_source` 或 `unavailable` 狀態。同步接入 API、CLI、Studio 與第八個 MCP 工具；116 個離線測試通過，未使用真實 Jev 金鑰，因此沒有宣稱真實評估準確率、費用或延遲。
 
 2026-09-29 補齊工程化缺口：恢復 `tests/` 持久化測試套件（112 個測試全部離線、pytest 全綠，覆蓋模型路由、上下文優化、資料引擎、編排層、接入層 API 與 MCP 協議層），並恢復 `04_mcp_client.py`、`05_model_routing.py` 兩個展示範例（均實際運行驗證）；CI 增加 pytest 步驟，`uv.lock` 同步更新。
 

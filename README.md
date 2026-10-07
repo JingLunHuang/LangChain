@@ -1,10 +1,10 @@
 # OmniAgent Platform · OmniRoute
 
-**先辨識任務，再選擇模型。** 將模型切換、可解釋路由、MCP 工具互通、混合檢索與上下文預算，整合成可透過介面、API、CLI 和 MCP 操作的 Agent 平台。
+**先辨識任務並選模，再以多個獨立意見審查回答。** 將模型切換、可解釋路由、Jev 決策評估、MCP 工具互通與混合檢索，整合成可透過介面、API、CLI 和 MCP 操作的 Agent 平台。
 
 ![OmniRoute Studio：任務輸入、模型選擇理由與串流回答](agent-platform/assets/omniroute-studio.png)
 
-這份作品的設計重點是獨立的 **OmniRoute 策略層**：依任務、能力、成本偏好和上下文限制選模；允許單次指定或整段對話固定模型；切換時保留歷史並重用資料索引。LangChain 擔任執行 adapter，LlamaIndex 提供檢索，平台自行管理選模策略與對話生命週期。
+這份作品以 **OmniRoute 策略層** 選模，再由選用的 **DecisionReviewer** 對回答提出獨立評估。LangChain 擔任執行 adapter，LlamaIndex 提供檢索；平台自行管理選模、對話生命週期和一次受控修訂。
 
 自動選模目前採中英文規則與操作者宣告的能力評分。離線示範使用模擬模型；真實模型品質、價格與 GPU 效能需另外量測。
 

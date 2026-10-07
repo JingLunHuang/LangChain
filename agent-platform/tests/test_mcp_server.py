@@ -19,6 +19,7 @@ EXPECTED_TOOLS = {
     "route_preview",
     "model_switch",
     "agent_invoke",
+    "agent_review",
     "routing_traces",
 }
 
@@ -43,7 +44,7 @@ async def test_create_server_instantiates() -> None:
     assert server.name == SERVER_NAME
 
 
-async def test_list_tools_contains_all_seven() -> None:
+async def test_list_tools_contains_all_eight() -> None:
     server = create_server()
     assert await _tool_names(server) == EXPECTED_TOOLS
 

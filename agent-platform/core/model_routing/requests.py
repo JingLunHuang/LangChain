@@ -22,6 +22,7 @@ class InvokeRequest(ModelRequest):
     message: str = Field(min_length=1, max_length=16000)
     session_id: str | None = Field(default=None, min_length=1, max_length=128)
     task: TaskType | None = None
+    review: bool = False
 
     @field_validator("message")
     @classmethod
@@ -41,3 +42,20 @@ class InvokeRequest(ModelRequest):
 
 class SwitchRequest(ModelRequest):
     session_id: str = Field(min_length=1, max_length=128)
+
+
+class ReviewRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    agent_id: str = Field(default="default", min_length=1, max_length=64)
+    message: str = Field(min_length=1, max_length=6000)
+    answer: str = Field(min_length=1, max_length=12000)
+    producer_model: str = Field(default="external", min_length=1, max_length=64)
+    task: TaskType = "general"
+
+    @field_validator("message", "answer")
+    @classmethod
+    def nonblank_text(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("review text must not be blank")
+        return value

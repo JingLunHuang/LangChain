@@ -1,0 +1,6 @@
+{"id": "odo-07", "prompt": "里程表與客戶陳述的里程不同，但缺乏照片拍攝日期。請列出需要補充的資料與暫時結論。", "source": "human_seed", "split": "train"}
+{"id": "odo-08", "prompt": "車損照片不清楚，保單條款也未提供。Agent 應如何決定是否要求人工複核或使用雲端教師？", "source": "human_seed", "split": "train"}
+{"id": "odo-09", "prompt": "檢索到兩份版本日期不同的保單節錄，對同一免賠額描述不一致。如何處理來源衝突？", "source": "human_seed", "split": "train"}
+{"id": "odo-10", "prompt": "VL 模型輸出速度 56.6 mph，但圖片中的 56.6 miles 是小計里程。推理模型應如何辨識並處理矛盾？", "source": "human_seed", "split": "train"}
+{"id": "odo-11", "prompt": "一個回答格式正確且流暢，卻捏造了理賠條款。請解釋評估與回流資料篩選應如何處理。", "source": "human_seed", "split": "train"}
+{"id": "odo-12", "prompt": "小模型與 Qwen-Max 對同一含糊圖片給出不同車速。沒有人工標註時應如何避免把教師輸出當作真值？", "source": "human_seed", "split": "train"}

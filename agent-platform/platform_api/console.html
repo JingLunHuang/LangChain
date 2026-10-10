@@ -5,7 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>OmniRoute Studio · OmniAgent</title>
   <link rel="stylesheet" href="/static/console.css">
+  <link rel="stylesheet" href="/static/edge.css">
   <script src="/static/console.js" defer></script>
+  <script src="/static/edge.js" defer></script>
 </head>
 <body>
   <header>
@@ -72,6 +74,30 @@
         </section>
       </div>
     </div>
+    <details id="edgePanel" class="card edge-panel">
+      <summary><span><strong>Edge Reasoner</strong> <small>Qwen-Max 教師資料 · SFT / GRPO 協同 · 視覺推理</small></span><span class="step">擴充模組 ▾</span></summary>
+      <div class="card-body">
+        <p class="help">沿用本平台的 API Key。此區顯示實際資料與模型狀態；訓練與評估結果只在產生後顯示。</p>
+        <div class="edge-grid">
+          <div>
+            <label for="edgeQuestion">問題</label>
+            <textarea id="edgeQuestion" maxlength="16000" placeholder="輸入問題；可選擇加入儀表圖片"></textarea>
+            <label for="edgeImage">圖片（選填，最大 10 MB）</label>
+            <input id="edgeImage" type="file" accept="image/png,image/jpeg,image/webp">
+            <label class="review-toggle" for="edgeCloud"><input id="edgeCloud" type="checkbox">本地結果未通過格式或偏好規則時，允許使用 Qwen-Max 雲端備援</label>
+            <div class="actions"><button id="edgeRun" class="button primary" type="button">執行 Edge Reasoner</button><button id="edgeRefresh" class="button" type="button">更新狀態</button></div>
+            <p id="edgeMessage" class="status" role="status" aria-live="polite">展開後可查看狀態；需先連接平台 API Key。</p>
+          </div>
+          <div>
+            <div class="edge-facts" id="edgeFacts" aria-live="polite"></div>
+            <div class="edge-result"><strong>回答</strong><pre id="edgeAnswer">尚未執行。</pre></div>
+            <div class="edge-result"><strong>路由與證據</strong><pre id="edgeTrace">尚未執行。</pre></div>
+            <div class="edge-result"><strong>實測評估</strong><pre id="edgeEvaluation">目前沒有已產生的評估報告。</pre></div>
+            <div class="edge-result"><strong>Agent 回測</strong><pre id="edgeBacktest">目前沒有已產生的回測報告。</pre></div>
+          </div>
+        </div>
+      </div>
+    </details>
     <footer><span>OmniRoute 任務路由 · MCP 工具互通 · 混合檢索 · 對話模型切換</span><span>固定前綴與輸入預算依選定模型調整</span></footer>
   </main>
 

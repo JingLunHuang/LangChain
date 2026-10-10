@@ -1,0 +1,16 @@
+.edge-panel { margin-top:22px; }
+.edge-panel > summary { display:flex; justify-content:space-between; align-items:center; gap:16px; padding:18px 24px; cursor:pointer; list-style:none; }
+.edge-panel > summary::-webkit-details-marker { display:none; }
+.edge-panel > summary strong { font-size:16px; }
+.edge-panel > summary small { margin-left:10px; color:var(--muted); font-size:12px; }
+.edge-panel[open] > summary { border-bottom:1px solid var(--line); }
+.edge-grid { display:grid; grid-template-columns:1fr 1fr; gap:24px; align-items:start; }
+.edge-grid input[type=file] { background:var(--paper); margin-bottom:10px; }
+.edge-facts { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+.edge-fact { border:1px solid var(--line); border-radius:8px; padding:11px 13px; }
+.edge-fact span { display:block; color:var(--muted); font-size:11px; }
+.edge-fact strong { display:block; font-size:15px; overflow-wrap:anywhere; }
+.edge-result { margin-top:16px; border-top:1px solid var(--line); padding-top:12px; }
+.edge-result > strong { display:block; font-size:13px; margin-bottom:8px; }
+@media(max-width:860px) { .edge-grid { grid-template-columns:1fr; } }
+@media(max-width:520px) { .edge-panel > summary { padding:18px; } .edge-panel > summary small { display:block; margin-left:0; } }

@@ -7,6 +7,7 @@ requires-python = ">=3.11"
 license = { text = "MIT" }
 dependencies = [
     "langchain>=1.0,<2",
+    "langgraph>=1,<2",
     "langchain-community>=0.4,<0.5",
     "langchain-openai>=1,<2",
     "dashscope>=1.24,<2",
@@ -49,12 +50,18 @@ packages = [
     "mcp_server",
     "core",
     "platform_api",
+    "edge_reasoner",
     "examples",
 ]
+
+[tool.hatch.build.targets.wheel.force-include]
+"data" = "edge_reasoner/data"
 
 [tool.hatch.build.targets.sdist]
 include = [
     "/core", "/platform_api", "/mcp_server", "/examples", "/scripts",
+    "/edge_reasoner", "/data", "/images", "/EDGE_REASONER.md",
+    "/requirements-edge-base.txt", "/requirements-edge-train.txt",
     "/README.md", "/PROJECT_OVERVIEW.md", "/LICENSE",
     "/models.example.json", "/assets",
     "/pyproject.toml", "/uv.lock", "/.env.example", "/.gitignore",

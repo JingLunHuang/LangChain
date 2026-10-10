@@ -1,0 +1,5 @@
+[
+  {"id":"odo-image-1","image":"images/1-vehicle-odometer-reading.jpg","label":{"total_odometer":528915,"total_unit":"km","trip_odometer":103.5,"trip_unit":"km","speed_kmh":0,"time":"19:18","temperature_c":4.5,"gear":"P"},"review":"人工目視核對原始圖片；總里程及速度與課程筆記一致。"},
+  {"id":"odo-image-2","image":"images/2-vehicle-odometer-reading.jpg","label":{"total_odometer":37756,"total_unit":"miles","trip_odometer":56.6,"trip_unit":"miles","speed_kmh":0,"time":"11:14","temperature_c":10.5,"gear":"P"},"review":"人工目視核對；原 Excel 把 56.6 miles 小計里程誤標為速度，圖片速度為 0 km/h。"}
+]
+

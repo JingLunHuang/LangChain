@@ -36,3 +36,11 @@ Thumbs.db
 .idea/
 .vscode/
 *.swp
+
+# Edge Reasoner generated outputs
+outputs/
+data/sft_dataset.jsonl
+data/sft_round2.jsonl
+data/rollouts.jsonl
+data/rejected.jsonl
+models/

@@ -1,0 +1,7 @@
+-r requirements-edge-base.txt
+Pillow>=10,<12
+openpyxl>=3.1,<4
+matplotlib>=3.8,<4
+langgraph>=0.2,<2
+streamlit>=1.39,<2
+

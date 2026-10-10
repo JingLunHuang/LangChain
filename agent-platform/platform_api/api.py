@@ -22,6 +22,7 @@ from core.model_routing.profiles import ModelCatalog
 from core.model_routing.requests import InvokeRequest, ReviewRequest, SwitchRequest
 from core.model_routing.router import RoutingError
 from core.orchestrator.runtime import AgentRuntime, Session
+from edge_reasoner.api import create_edge_router
 from mcp_server.client import MCPConnection, as_langchain_tools, connect
 from platform_api.auth import KeyStore, Tenant
 
@@ -287,6 +288,7 @@ def create_app(
             raise HTTPException(404, "Unknown managed key")
         return {"revoked": True}
 
+    application.include_router(create_edge_router(current_tenant))
     return application
 
 

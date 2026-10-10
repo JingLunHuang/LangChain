@@ -1,6 +1,7 @@
 'use strict';
 const $ = id => document.getElementById(id);
 const state = { key: '', models: [], pinned: null, busy: false, controller: null };
+window.omniEdgeKey = () => state.key;
 const taskNames = { general:'一般任務', coding:'程式開發', reasoning:'邏輯推理', writing:'文字寫作', knowledge:'知識檢索' };
 const modes = { auto:'自動選模', request:'本次指定', session:'對話固定' };
 const examples = [

@@ -245,3 +245,7 @@ API、MCP 與 CLI 共用 `core/model_routing/requests.py` 的請求驗證；上�
 測試套件位於 `tests/`，116 個測試全部離線（demo 模式），無需任何金鑰。唯一 CI 位於儲存庫根目錄 `.github/workflows/agent-platform.yml`，執行品質檢查、測試、編譯及打包。
 
 授權：[MIT](LICENSE)。
+
+## Edge Reasoner 擴充
+
+原有 OmniRoute Studio UI 下方新增可展開的 SFT / GRPO / 視覺推理功能；設定、資料來源及限制見 [EDGE_REASONER.md](EDGE_REASONER.md)。
